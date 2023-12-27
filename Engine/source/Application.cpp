@@ -84,20 +84,23 @@ namespace Engine {
 			DispatchMessage(&message);
 
 		}
-
-		mRenderer.UpdateDraw();
+		if (mIsRunning) {
+			mRenderer.UpdateDraw();
+		}
+		
 	}
 
 	void Application::OnDestroy()
 	{
-		std::cout << "Closed the window - shutting down application" << std::endl;
+		mIsRunning = false;
 
+		std::cout << "Closed the window - shutting down application" << std::endl;
 
 		mRenderer.Release();
 
 		DXGIDebug::Get().GetLiveObjects();
 
-		mIsRunning = false;
+		
 	}
 
 }

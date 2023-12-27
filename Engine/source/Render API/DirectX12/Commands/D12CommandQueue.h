@@ -10,14 +10,13 @@ namespace Engine {
 		D12CommandQueue() = default;
 		~D12CommandQueue();
 
-
-
-
-
 		void Initialize(ID3D12Device* pDevice);
 
-		void Release();
+		void M_ExecuteCommandList(ID3D12CommandList* pCommandList);
 
+
+		void Release();
+		void FlushQueue();
 
 		inline ID3D12Fence* GetFence() { return mFence.Get(); }
 

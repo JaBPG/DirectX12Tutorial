@@ -37,6 +37,10 @@ namespace Engine {
 	private: 
 		UINT mWidth = 0;
 		UINT mHeight = 0;
+
+
+	private: //temp testvars
+		UINT mCurentidx = 0;
 	};
 }
 
