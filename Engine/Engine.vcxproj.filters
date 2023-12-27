@@ -51,6 +51,12 @@
     <ClInclude Include="source\Render API\DirectX12\Commands\D12CommandList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="source\Render API\DirectX12\DXGI\DXGISwapChain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\EngineSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\pch.cpp">
@@ -81,6 +87,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\Render API\DirectX12\Commands\D12CommandList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Render API\DirectX12\DXGI\DXGISwapChain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

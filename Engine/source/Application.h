@@ -35,6 +35,10 @@ namespace Engine {
 		HWND mWindowHandle = nullptr;
 		bool mIsRunning = false;
 
+
+	private:
+		UINT mWidth = 1280;
+		UINT mHeight = 720;
 	};
 }
 

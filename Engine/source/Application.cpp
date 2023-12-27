@@ -53,7 +53,7 @@ namespace Engine {
 
 		RegisterClass(&wndClass);
 
-		mWindowHandle = CreateWindow(L"BaseWindowClass", L"YOUTUBE ENGINE WINDOW", WS_OVERLAPPEDWINDOW, 200, 200, 1280, 720, 0, 0, 0, this); //refer back to the lParam stuff later
+		mWindowHandle = CreateWindow(L"BaseWindowClass", L"YOUTUBE ENGINE WINDOW", WS_OVERLAPPEDWINDOW, 200, 200, mWidth, mHeight, 0, 0, 0, this); //refer back to the lParam stuff later
 
 		if (!mWindowHandle) {
 
@@ -72,7 +72,7 @@ namespace Engine {
 	void Application::OnCreate(HWND hwnd)
 	{
 		std::cout << "Created the actual window" << std::endl;
-		mRenderer.Initialize(hwnd);
+		mRenderer.Initialize(hwnd, mWidth,mHeight);
 	}
 
 	void Application::Update()
@@ -84,6 +84,8 @@ namespace Engine {
 			DispatchMessage(&message);
 
 		}
+
+		mRenderer.UpdateDraw();
 	}
 
 	void Application::OnDestroy()

@@ -4,7 +4,7 @@
 namespace Engine {
 
 	//A direct type command queue wrapper
-	class D12CommandQueue : public Microsoft::WRL::ComPtr<ID3D12CommandQueue>
+	class YT_API D12CommandQueue : public Microsoft::WRL::ComPtr<ID3D12CommandQueue>
 	{
 	public:
 		D12CommandQueue() = default;
