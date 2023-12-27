@@ -5,6 +5,8 @@
 //#include <windowsx.h>
 
 
+#include "Render API/DirectX12/Debug/DXGIDebug.h"
+
 
 namespace Engine {
 
@@ -87,6 +89,9 @@ namespace Engine {
 	void Application::OnDestroy()
 	{
 		std::cout << "Closed the window - shutting down application" << std::endl;
+
+		DXGIDebug::Get().GetLiveObjects();
+
 		mIsRunning = false;
 	}
 

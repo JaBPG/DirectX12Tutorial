@@ -17,7 +17,7 @@ namespace Engine {
 		bool Initialize();
 
 		void OnCreate(HWND hwnd);
-
+		
 
 		void Update();
 

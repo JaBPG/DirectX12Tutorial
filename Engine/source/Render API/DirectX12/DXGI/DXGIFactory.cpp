@@ -7,6 +7,8 @@ namespace Engine {
 
 	DXGIFactory::DXGIFactory()
 	{
+
+		//do seperate versions for different builds (Should be coupled with the use of the DebugLayer)
 		YT_EVAL_HR(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&ptr_)), "Some error");
 	}
 

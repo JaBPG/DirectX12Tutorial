@@ -6,6 +6,8 @@
 #include "DirectX12/DXGI/DXGIAdapter.h"
 
 
+#include "DirectX12/Debug/D12Debug.h"
+
 
 
 namespace Engine {
@@ -14,12 +16,20 @@ namespace Engine {
 
 	RenderAPI::~RenderAPI()
 	{
+		if (mDevice.Get()) {
+
+			mDevice.Reset();
+
+		}
+
 	}
 
 	void RenderAPI::Initialize(HWND hwnd)
 	{
-		DXGIFactory factory;
+		//this could be disabled during non-debug-builds
+		D12Debug::Get().Enable();
 
+		DXGIFactory factory;
 		DXGIAdapter adapter = factory.GetAdapter();
 
 		DXGI_ADAPTER_DESC desc;
