@@ -16,12 +16,7 @@ namespace Engine {
 
 	RenderAPI::~RenderAPI()
 	{
-		if (mDevice.Get()) {
-
-			mDevice.Reset();
-
-		}
-
+		Release();
 	}
 
 	void RenderAPI::Initialize(HWND hwnd)
@@ -32,16 +27,35 @@ namespace Engine {
 		DXGIFactory factory;
 		DXGIAdapter adapter = factory.GetAdapter();
 
-		DXGI_ADAPTER_DESC desc;
-		adapter->GetDesc(&desc);
-
-
-		PRINT_W_N("Selected device " << desc.Description);
+		/* CONSOLE OUTPUT FOR DEBUGGING */
+		{
+			DXGI_ADAPTER_DESC desc;
+			adapter->GetDesc(&desc);
+			PRINT_W_N("Selected device " << desc.Description);
+		}
+		/* END DEBUGGING OUTPUT */
 
 		mDevice.Init(adapter.Get());
-
 		mDevice->SetName(L"Main virtual device");
 
+		mCommandQueue.Initialize(mDevice.Get());
+		mCommandList.Initialize(mDevice.Get());
+
+	}
+
+	void RenderAPI::Release()
+	{
+
+		mCommandList.Release();
+
+		mCommandQueue.Release();
+
+
+		if (mDevice.Get()) {
+
+			mDevice.Reset();
+
+		}
 	}
 
 }
