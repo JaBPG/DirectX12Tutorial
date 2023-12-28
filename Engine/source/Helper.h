@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 
+#define KBs(x) 1024* (x)
 
 
 

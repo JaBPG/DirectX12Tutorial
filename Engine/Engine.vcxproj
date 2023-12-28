@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\Render API\DirectX12\Resource\D12Resource.h" />
     <ClInclude Include="source\EngineSettings.h" />
     <ClInclude Include="source\Render API\DirectX12\DXGI\DXGISwapChain.h" />
     <ClInclude Include="source\Render API\DirectX12\Commands\D12CommandList.h" />
@@ -94,8 +95,10 @@
     <ClInclude Include="source\Application.h" />
     <ClInclude Include="source\EngineMin.h" />
     <ClInclude Include="source\pch.h" />
+    <ClInclude Include="source\Render API\RenderDataTypes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Render API\DirectX12\Resource\D12Resource.cpp" />
     <ClCompile Include="source\Render API\DirectX12\DXGI\DXGISwapChain.cpp" />
     <ClCompile Include="source\Render API\DirectX12\Commands\D12CommandList.cpp" />
     <ClCompile Include="source\Render API\DirectX12\Commands\D12CommandQueue.cpp" />
