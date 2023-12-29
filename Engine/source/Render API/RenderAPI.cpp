@@ -8,8 +8,7 @@
 
 #include "DirectX12/Debug/D12Debug.h"
 
-#include "DirectX12/Pipeline/HLSLShader.h"
-#include "DirectX12/Pipeline/D12RootSignature.h" 
+
 
 
 
@@ -67,52 +66,20 @@ namespace Engine {
 
 		mDynamicVertexBuffer->Unmap(0, 0);
 
-		
-		
-		HLSLShader testShader;
-
-		testShader.Initialize(L"shaders/VS.hlsl", HLSLShader::ShaderType::VERTEX);
-
-			
-		D12RootSignature rstest;
-		rstest.Initialize(mDevice.Get());
-
-
-		/*
-		
-		 
-		
-		Create shader programs
-		- Wrapper for the shaders and their compliations [done]
-		- Create the actual shaders/program
-
-		Setup two input layouts (one for vertex/index buffers + one for datastructures needed for the pipeline/shader programs)
-		- The pipeline input layout
-			- Wrapper?
-
-		- The root signature
-		- Wrapper
-
-
-		Set up the actual pipeline
-		- Wrapper
-		-- Simply set parameters 
-		- Create the functionality that couples everything into a complete pipeline
-		
-		
-		*/
-
-
-
-
 		/*
 		//ONLY CPU = default ram / cache
 		//ONLY GPU = default heap on GPU (VRAM)
 		//Shared CPU and GPU = with read/write for all - it's stored on the GPU
 		//Readback memory on GPU (With Read from the CPU)
-		
-		
+
+
 		*/
+		
+		mBasePipeline.Initialize(mDevice.Get());
+
+
+
+
 
 
 	}
