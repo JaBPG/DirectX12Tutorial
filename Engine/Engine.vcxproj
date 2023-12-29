@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\Render API\DirectX12\Pipeline\D12RootSignature.h" />
     <ClInclude Include="source\Render API\DirectX12\Pipeline\HLSLShader.h" />
     <ClInclude Include="source\Render API\DirectX12\Resource\D12Resource.h" />
     <ClInclude Include="source\EngineSettings.h" />
@@ -99,6 +100,7 @@
     <ClInclude Include="source\Render API\RenderDataTypes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Render API\DirectX12\Pipeline\D12RootSignature.cpp" />
     <ClCompile Include="source\Render API\DirectX12\Pipeline\HLSLShader.cpp" />
     <ClCompile Include="source\Render API\DirectX12\Resource\D12Resource.cpp" />
     <ClCompile Include="source\Render API\DirectX12\DXGI\DXGISwapChain.cpp" />
