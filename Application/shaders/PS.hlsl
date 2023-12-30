@@ -10,6 +10,7 @@ struct PS_INPUT //from the VS_OUTPUT
 float4 main(PS_INPUT input) : SV_TARGET
 {
 
+   
     return input.color;
 
 }
