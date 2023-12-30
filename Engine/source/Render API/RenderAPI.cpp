@@ -246,7 +246,7 @@ namespace Engine {
 
 
 		DirectX::XMMATRIX viewMatrix;
-		viewMatrix = DirectX::XMMatrixLookAtLH({ 2.0f, 1.5f,-3.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+		viewMatrix = DirectX::XMMatrixLookAtLH({ -3.0f, 3.5f,-3.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
 
 		DirectX::XMMATRIX projectionMatrix;
 		projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(1.2217304764f, 16.0f / 9.0f, 1.0f, 50.0f);
@@ -260,25 +260,23 @@ namespace Engine {
 
 
 
-
 		MaterialCelShader material; 
-		material.diffuseAlbedo = { 1.0f,0.0f,0.05f,1.0f };
+		material.diffuseAlbedo = { .65f,0.0f,0.025f,1.0f };
 
 		mBufferUploader.Upload((D12Resource*)mMaterialBuffer1.GetAddressOf(), &material, sizeof(MaterialCelShader),
 			(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-
-		mLights[0].direction = { 0.0f,-1.0f,0.0f };
+		
+		mLights[0].position = { 0.0f,0.0f,0.0f };
 		mLights[0].strength = 1.0f;
+		mLights[0].direction = { .5f,-1.0f,0.0f };
+		
 
 		/*
 
-		7th video
-		- A simple "Toon" shader
-		
-
 		8th video 
 		- handling rotation of objects / scaling / moving
+
+		- Multiple objects of the same mesh, but with different attributes
 		
 		*/
 
@@ -287,8 +285,8 @@ namespace Engine {
 
 	void RenderAPI::UpdateDraw()
 	{
-		memcpy(mCBPassData.GetCPUMemory(), &mViewProjectionMatrix, sizeof(PassData));
-		memcpy((BYTE*)mCBPassData.GetCPUMemory()+sizeof(PassData), &mLights[0], sizeof(Light));
+		memcpy(mCBPassData.GetCPUMemory(), &mViewProjectionMatrix, sizeof(PassData::viewproject));
+		memcpy((BYTE*)mCBPassData.GetCPUMemory()+sizeof(PassData::viewproject), &mLights[0], sizeof(Light));
 
 		
 		D3D12_RESOURCE_BARRIER barrier = {};

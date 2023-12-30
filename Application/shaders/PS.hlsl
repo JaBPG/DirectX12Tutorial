@@ -2,9 +2,10 @@ struct PS_INPUT //from the VS_OUTPUT
 {
 	
     float4 position : SV_POSITION;
-    float4 color : COLOR;
+    float3 normal : NORMAL;
 	
 };
+
 
 
 struct MaterialData
@@ -16,7 +17,7 @@ struct MaterialData
 struct LightData
 {
     float3 position;
-    float strenght;
+    float strength;
     float3 direction;
     float padding;
 
@@ -28,13 +29,35 @@ struct PassData
     LightData light;
 };
 
-
+ConstantBuffer<PassData> gPassData : register(b0);
 ConstantBuffer<MaterialData> gMaterialData : register(b1);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-
+    float intensity;
+    float4 color;
+    
+    intensity = dot(-(gPassData.light.direction), normalize(input.normal));
+    
+    if (intensity > 0.90)
+    {
+        color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+    else if (intensity > 0.5)
+    {
+        color = float4(.6f, 0.6f, 0.6f, 1.0f);
+        
+    }
+    else if (intensity > 0.25)
+    {
+        color = float4(.4f, 0.4f, 0.4f, 1.0f);
+        
+    }
+    else
+    {
+        color = float4(.2f, 0.2f, 0.2f, 1.0f);
+    }
    
-    return gMaterialData.diffuseAlbedo;
+    return color  * gMaterialData.diffuseAlbedo;
    
 }
