@@ -120,25 +120,61 @@ namespace Engine {
 		mSRRect.top = 0;
 		mSRRect.bottom = mViewport.Height;
 
+		DirectX::XMMATRIX viewMatrix;
+
+		viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f,1.0f,-3.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+
+		DirectX::XMMATRIX projectionMatrix;
+
+		projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(1.2217304764f, 16.0f / 9.0f, 1.0f, 50.0f);
+
+
+		mViewProjectionMatrix = viewMatrix * projectionMatrix;
+
+
+
 		/*
-		OUTLINE FOR THE NEXT STEPS:
-
-		Bind the rendertaget to every part of our outputmerger - check
-
-		We want to bind the rootsignature and pipeline to the GPU / draw proces - check
-		Tell how to interpret the data -> set the primitive topology - check
-
-
-		Bind a datastorage to the "pipeline"/input assembler and give it a view (vertex buffer view) [check]
 		
-		DrawCall [check]
+		
+		1 Video: 
+		Math/Coordinate system: Some DirectXMath functions to setup our 3d world.
 
-		Viewport
+		Discuss a bit about the view and the projection matrix
 
-		Scissor rect
+		2 Video:
 
+		Uploading the "camera"/viewpoint matrix that helps translate from 3D space into 2D screen space
+		- Constantbuffer
+		- Bind that to the pipeline
+
+		3 Video:
+		Rendering a 3D box -creating the vertices and uploading
+		Depth buffering
+
+		4 Video: 
+		- "uploading" data to the default heap
+		- resource barriers
+		
+		
+
+		 
+		Define a 3D space, with 3 axes
+		Define the coordinate system axes in relation to each other...
+		- I.E. Which axis is up? Which is forward? Which the right axis?
+
+		Define a camera/eye position with a looking direction
+
+		Define a 3D object at the origin (0,0,0)
+		Offset the camera and set it to look at the origin
+
+		
+		Adress the math and the actual shader computations that translate from 3D world space into 2d "clipspace"/"screenspace"
+
+		Lastly we'll probably need an episode on the depth buffer
+		
+		
+		
 		*/
-
 
 
 	}
@@ -171,13 +207,6 @@ namespace Engine {
 		mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		mCommandList.GFXCmd()->IASetVertexBuffers(0, 1, &mDynamicVBView);
-
-		/*
-		
-		Do drawing stuff here
-		
-		
-		*/
 
 		mCommandList.GFXCmd()->DrawInstanced(3, 1, 0, 0);
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "EngineMin.h"
 #include <Windows.h>
-
+#include <DirectXMath.h>
 
 #include "RenderDataTypes.h"
 
@@ -48,6 +48,7 @@ namespace Engine {
 		D3D12_VIEWPORT mViewport;
 		D3D12_RECT mSRRect;
 
+		DirectX::XMMATRIX mViewProjectionMatrix;
 
 	private: 
 		UINT mWidth = 0;
