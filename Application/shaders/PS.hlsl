@@ -30,7 +30,7 @@ struct PassData
 };
 
 ConstantBuffer<PassData> gPassData : register(b0);
-ConstantBuffer<MaterialData> gMaterialData : register(b1);
+ConstantBuffer<MaterialData> gMaterialData : register(b2);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {

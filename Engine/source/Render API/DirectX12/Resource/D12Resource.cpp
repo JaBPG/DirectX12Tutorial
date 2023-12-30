@@ -68,6 +68,7 @@ namespace Engine {
 
 		if (mMemory && Get()) {
 			Get()->Unmap(0, 0);
+			mMemory = nullptr;
 		}
 
 		if (Get()) {

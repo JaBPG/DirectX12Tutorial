@@ -15,6 +15,8 @@ namespace Engine {
 		void Release();
 		void* GetCPUMemory();
 
+		/* implement move / copy constructor for object since we store it in vectors and they resize */
+
 	private:
 		void* mMemory = nullptr;
 	};
