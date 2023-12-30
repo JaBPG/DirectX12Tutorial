@@ -72,6 +72,9 @@
     <ClInclude Include="source\Render API\DirectX12\Pipeline\D12PipelineState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="source\Utilities\Utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\pch.cpp">
@@ -117,6 +120,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\Render API\DirectX12\Pipeline\D12PipelineState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Utilities\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

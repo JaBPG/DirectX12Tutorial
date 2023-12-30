@@ -15,6 +15,14 @@ struct VS_OUTPUT
 };
 
 
+struct PassData
+{
+    float4x4 viewproj;
+};
+
+ConstantBuffer<PassData> gPassData : register(b0);
+
+
 VS_OUTPUT main(VS_INPUT input)
 {
     VS_OUTPUT output;

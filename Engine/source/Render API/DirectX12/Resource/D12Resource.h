@@ -12,6 +12,10 @@ namespace Engine {
 
 
 		void Release();
+		void* GetCPUMemory();
+
+	private:
+		void* mMemory = nullptr;
 	};
 
 

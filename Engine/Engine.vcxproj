@@ -99,6 +99,7 @@
     <ClInclude Include="source\EngineMin.h" />
     <ClInclude Include="source\pch.h" />
     <ClInclude Include="source\Render API\RenderDataTypes.h" />
+    <ClInclude Include="source\Utilities\Utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Render API\DirectX12\Pipeline\D12PipelineState.cpp" />
@@ -119,6 +120,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\Utilities\Utilities.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
