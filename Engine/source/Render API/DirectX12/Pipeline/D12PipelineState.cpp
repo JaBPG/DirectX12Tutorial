@@ -49,6 +49,12 @@ namespace Engine {
 		desc.DepthStencilState.DepthEnable = true;
 		desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 		desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		desc.DepthStencilState.StencilEnable = false;
+
+
+
+
+
 
 
 		D3D12_INPUT_ELEMENT_DESC elements[] = {
@@ -181,11 +187,12 @@ namespace Engine {
 
 	void D12PipelineState::Release()
 	{
-		mRootSignature.Release();
-		mShaders[0].Release();
-		mShaders[1].Release();
+		
 
 		if (Get()) {
+			mRootSignature.Release();
+			mShaders[0].Release();
+			mShaders[1].Release();
 			Reset();
 		}
 	}
