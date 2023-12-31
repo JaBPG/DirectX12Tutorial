@@ -217,13 +217,14 @@ namespace Engine {
 	
 
 		mBasePipeline.Initialize(mDevice.Get());
+		mPlanarShadowPipeline.InitializeAsTransparent(mDevice.Get());
 
 		mDepthBuffer.InitializeAsDepthBuffer(mDevice.Get(), mWidth, mHeight);
 
 		mDepthDescHeap.InitializeDepthHeap(mDevice.Get());
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-		dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 		dsvDesc.Texture2D.MipSlice = 0;
 		dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
@@ -246,7 +247,7 @@ namespace Engine {
 
 
 		DirectX::XMMATRIX viewMatrix;
-		viewMatrix = DirectX::XMMatrixLookAtLH({ -8.0f, 3.5f,-8.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+		viewMatrix = DirectX::XMMatrixLookAtLH({ 8.0f, 8.5f,-8.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
 		//DirectX::XMMatrixLookToLH({VEC3 pos},{VEC3 normalizedForward}, {VEC3 normalized updirection});
 
 		DirectX::XMMATRIX projectionMatrix;
@@ -298,7 +299,7 @@ namespace Engine {
 
 		mLights[0].position = { 0.0f,0.0f,0.0f };
 		mLights[0].strength = 1.0f;
-		mLights[0].direction = { 1.0f,-1.0f,0.0f };
+		mLights[0].direction = { 0.0f,-1.0f,1.0f };
 		
 		//Transform allocations
 		{
@@ -338,10 +339,20 @@ namespace Engine {
 
 		/*
 
-		8th video 
-		- handling rotation of objects / scaling / moving
+		Projects:
+		- Planar shadows
+		- System: Timer / timestep
+		- Custom move/copy operator on the D12Resource (bug fix)
 
-		- Multiple objects of the same mesh, but with different attributes
+		Ep. 24: 
+		-We will create a pipeline with stenciling blending
+
+		Ep. 25:
+		- Implementing shadows using seperate shaders and our new shadow pipeline
+
+		Ep. 26:
+		- Implementing a timestep and perhaps some "animation" stuff
+		- Do the bugfix here
 		
 		*/
 

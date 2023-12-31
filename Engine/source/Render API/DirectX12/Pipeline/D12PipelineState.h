@@ -12,6 +12,7 @@ namespace Engine {
 		~D12PipelineState();
 
 		void Initialize(ID3D12Device* pDevice);
+		void InitializeAsTransparent(ID3D12Device* pDevice);
 
 		void Release(); 
 

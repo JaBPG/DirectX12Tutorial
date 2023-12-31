@@ -39,6 +39,7 @@ namespace Engine {
 		DXGISwapChain mSwapChain;
 
 		D12PipelineState mBasePipeline;
+		D12PipelineState mPlanarShadowPipeline;
 		D12Resource mDepthBuffer;
 
 

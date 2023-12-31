@@ -49,13 +49,13 @@ namespace Engine {
 		resDesc.Height = height;
 		resDesc.DepthOrArraySize = 1;
 		resDesc.MipLevels = 0;
-		resDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		resDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		resDesc.SampleDesc = { 1,0 };
 		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 		resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 		D3D12_CLEAR_VALUE clearValue = {};
-		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		clearValue.DepthStencil.Depth = 1.0f;
 		clearValue.DepthStencil.Stencil = 0.0f;
 

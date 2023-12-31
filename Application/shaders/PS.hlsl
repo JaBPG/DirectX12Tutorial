@@ -53,9 +53,9 @@ float4 main(PS_INPUT input) : SV_TARGET
         color = float4(.4f, 0.4f, 0.4f, 1.0f);
         
     }
-    else
+    else 
     {
-        color = float4(.2f, 0.2f, 0.2f, 1.0f);
+        color = float4(.05f, 0.05f, 0.05f, 1.0f);
     }
    
     return color  * gMaterialData.diffuseAlbedo;
