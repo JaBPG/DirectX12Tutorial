@@ -26,7 +26,7 @@ namespace Engine {
 
 		void Initialize(HWND hwnd, const UINT width, const UINT height);
 
-		void UpdateDraw();
+		void UpdateDraw(const float ts);
 
 		void Release();
 
@@ -70,6 +70,8 @@ namespace Engine {
 		UINT mWidth = 0;
 		UINT mHeight = 0;
 
+	private:
+		float mLightCycle = 0.5f; //this ranges from 0.0 - 1.0f
 
 	private: //temp testvars
 		UINT mCurentidx = 0;

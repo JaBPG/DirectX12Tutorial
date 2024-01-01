@@ -5,6 +5,8 @@
 
 #include "Render API/RenderAPI.h"
 
+#include "System/Timers/TimeStep.h"
+
 
 
 
@@ -30,6 +32,8 @@ namespace Engine {
 	private: //subsystems:
 
 		RenderAPI mRenderer;
+		Timer::TimeStep mTimeStepSystem;
+
 
 	private: //variables:
 		HWND mWindowHandle = nullptr;

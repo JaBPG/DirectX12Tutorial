@@ -77,6 +77,9 @@ namespace Engine {
 
 	void Application::Update()
 	{
+		float ts = mTimeStepSystem.Tick();
+
+
 		MSG message;
 
 		while (PeekMessage(&message, 0, 0, 0, PM_REMOVE)) {
@@ -85,7 +88,7 @@ namespace Engine {
 
 		}
 		if (mIsRunning) {
-			mRenderer.UpdateDraw();
+			mRenderer.UpdateDraw(ts);
 		}
 		
 	}

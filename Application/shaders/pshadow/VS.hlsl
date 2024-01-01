@@ -43,7 +43,6 @@ VS_OUTPUT main(VS_INPUT input)
     
     
     float4 worldProjectPos = mul(gObjectData.transform, float4(input.position, 1.0f));
-    
 
     output.position = mul(gPassData.viewproj, worldProjectPos);
     

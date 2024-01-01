@@ -397,15 +397,44 @@ namespace Engine {
 
 	}
 
-	void RenderAPI::UpdateDraw()
+	void RenderAPI::UpdateDraw(const float ts)
 	{
+
+		Light currentFrameLights = mLights[0];
+
+		//Simulation
+		{
+		
+			float increment = 0.05f * ts;
+
+			if (mLightCycle >= 1.0f) {
+				mLightCycle = 0.0f;
+			}
+		
+			mLightCycle += increment;
+
+
+			float clampedCycle = (mLightCycle * 2.0f) - 1.0f; // this will set it between -1 and 1 (with 0.0 = midday)
+			float maxrotation = 3.14;// / 2.0f;
+			float actualrotation = maxrotation * clampedCycle;
+
+			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationNormal({ 0.0f,0.0f,1.0f,0.0f }, actualrotation);
+
+			DirectX::XMVECTOR frameLightDirection = DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&mLights[0].direction), rotationMatrix);
+
+			DirectX::XMStoreFloat3(&currentFrameLights.direction, frameLightDirection);
+
+		}
+
+
+
 		//Update buffers
 		{
 			memcpy(mCBPassData.GetCPUMemory(), &mViewProjectionMatrix, sizeof(PassData::viewproject));
-			memcpy((BYTE*)mCBPassData.GetCPUMemory() + sizeof(PassData::viewproject), &mLights[0], sizeof(Light));
+			memcpy((BYTE*)mCBPassData.GetCPUMemory() + sizeof(PassData::viewproject), &currentFrameLights, sizeof(Light));
 			
 			DirectX::XMVECTOR planeToCastShadow = { 0.0f,1.0f,0.0f,0.0f };
-			DirectX::XMVECTOR dirToLightSource = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&mLights[0].direction));
+			DirectX::XMVECTOR dirToLightSource = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&currentFrameLights.direction));
 
 			DirectX::XMMATRIX shadowMatrix = DirectX::XMMatrixShadow(planeToCastShadow, dirToLightSource);
 			DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.001f, 0.0f);
