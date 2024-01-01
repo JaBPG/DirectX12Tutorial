@@ -7,6 +7,35 @@ namespace Engine {
 	{
 		Release();
 	}
+	D12Resource::D12Resource(D12Resource&& other) noexcept
+	{
+		if (other.mMemory) { other->Unmap(0, 0); }
+
+		if (other.Get()) {
+			Swap(other);
+		}
+
+		if (Get() && other.mMemory) {
+			Get()->Map(0, 0, &mMemory);
+			other.mMemory = nullptr;
+		}
+
+	}
+	D12Resource& D12Resource::operator=(D12Resource&& other) noexcept
+	{
+		if (other.mMemory) { other->Unmap(0, 0); }
+
+		if (other.Get()) {
+			Swap(other);
+		}
+
+		if (Get() && other.mMemory) {
+			Get()->Map(0, 0, &mMemory);
+			other.mMemory = nullptr;
+		}
+
+		return *this;
+	}
 	void D12Resource::Initialize(ID3D12Device* pDevice, const unsigned int numBytes, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES initialState)
 	{
 

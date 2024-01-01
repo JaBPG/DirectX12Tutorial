@@ -247,7 +247,7 @@ namespace Engine {
 
 
 		DirectX::XMMATRIX viewMatrix;
-		viewMatrix = DirectX::XMMatrixLookAtLH({ 8.0f, 8.5f,-8.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+		viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 8.5f,-8.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
 		//DirectX::XMMatrixLookToLH({VEC3 pos},{VEC3 normalizedForward}, {VEC3 normalized updirection});
 
 		DirectX::XMMATRIX projectionMatrix;
@@ -260,7 +260,7 @@ namespace Engine {
 		//material allocations
 
 		{
-			mMaterialBuffers.reserve(3);
+			
 
 			mMaterialBuffers.emplace_back(D12Resource());
 			mMaterialBuffers[0].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(MaterialCelShader)), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
@@ -299,17 +299,19 @@ namespace Engine {
 
 		mLights[0].position = { 0.0f,0.0f,0.0f };
 		mLights[0].strength = 1.0f;
-		mLights[0].direction = { 0.0f,-1.0f,1.0f };
+		mLights[0].direction = { 0.0f,-1.0f,0.0f };
 		
 		//Transform allocations
 		{
 
-			mObjTransforms.reserve(3);
+			
 			mObjTransforms.emplace_back(D12Resource());
 			mObjTransforms[0].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(ObjectData)), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
 			mObjTransforms[0]->SetName(L"Transform 1 CB");
 
 			ObjectData tempData;
+			tempData.transform.r[3] = { 0.0f,1.0f,0.0f,1.0f };
+
 			memcpy(mObjTransforms[0].GetCPUMemory(), &tempData, sizeof(ObjectData));
 
 			mObjTransforms.emplace_back(D12Resource());
@@ -317,7 +319,7 @@ namespace Engine {
 			mObjTransforms[1]->SetName(L"Transform 2 CB");
 			tempData.transform.r[0] = { .3f,0.0f,1.0f,0.0f };
 
-			tempData.transform.r[3] = { -3.0f,0.0f,-2.0f,0.0f };
+			tempData.transform.r[3] = { -3.0f,1.0f,-2.0f,1.0f };
 
 
 			memcpy(mObjTransforms[1].GetCPUMemory(), &tempData, sizeof(ObjectData));
@@ -329,9 +331,9 @@ namespace Engine {
 			tempData.transform = DirectX::XMMatrixIdentity();
 
 			tempData.transform.r[0] = { 1000.0f,0.0,0.0,0.0f };
-			tempData.transform.r[1] = { 0.0,0.3f,0.0,0.0f };
+			tempData.transform.r[1] = { 0.0,1.0f,0.0,0.0f };
 			tempData.transform.r[2] = { 0.0,0.0,1000.0f,0.0f };
-			tempData.transform.r[3] = { 0.0f,-4.0f,0.0f,1.0f };
+			tempData.transform.r[3] = { 0.0f,-1.0f,0.0f,1.0f };
 
 			memcpy(mObjTransforms[2].GetCPUMemory(), &tempData, sizeof(ObjectData));
 
@@ -342,17 +344,17 @@ namespace Engine {
 		Projects:
 		- Planar shadows
 		- System: Timer / timestep
-		- Custom move/copy operator on the D12Resource (bug fix)
 
-		Ep. 24: 
-		-We will create a pipeline with stenciling blending
 
-		Ep. 25:
-		- Implementing shadows using seperate shaders and our new shadow pipeline
+		NEW VIDEO PLAN:
+
 
 		Ep. 26:
-		- Implementing a timestep and perhaps some "animation" stuff
-		- Do the bugfix here
+		- Implement shadows using shaders and shadow pipeline
+
+		Ep. 27:
+		- Implement timestep and some basic animations
+
 		
 		*/
 
@@ -382,7 +384,7 @@ namespace Engine {
 		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = mDepthDescHeap->GetCPUDescriptorHandleForHeapStart();
 
 		mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle, clearColor, 0, 0);
-		mCommandList.GFXCmd()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, 0);
+		mCommandList.GFXCmd()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, 0);
 		mCommandList.GFXCmd()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 		mCommandList.GFXCmd()->RSSetViewports(1, &mViewport);
@@ -471,6 +473,7 @@ namespace Engine {
 		mCBPassData.Release();
 
 		mBasePipeline.Release();
+		mPlanarShadowPipeline.Release();
 		mDepthDescHeap.Release();
 		mDepthBuffer.Release();
 
