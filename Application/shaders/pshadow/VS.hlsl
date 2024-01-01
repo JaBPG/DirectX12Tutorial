@@ -1,4 +1,3 @@
-//OUR SHADOW VS
 struct VS_INPUT
 {
     float3 position : POSITION;
@@ -10,7 +9,7 @@ struct VS_INPUT
 struct VS_OUTPUT
 {
     float4 position : SV_POSITION;
-    float3 normal : NORMAL;
+  
 };
 
 struct LightData
@@ -46,7 +45,7 @@ VS_OUTPUT main(VS_INPUT input)
     worldPos = mul(gObjectData.transform, float4(worldPos, 1.0f)).xyz;
 
     output.position = mul(gPassData.viewproj, float4(worldPos, 1.0f));
-    output.normal = mul(gObjectData.transform, float4(input.normal, 1.0f)).xyz;
+    
     
     return output;
 }

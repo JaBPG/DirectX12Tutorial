@@ -1,6 +1,4 @@
-//Base pixel shader
-
-struct PS_INPUT 
+struct PS_INPUT //from the VS_OUTPUT
 {
 	
     float4 position : SV_POSITION;
@@ -39,7 +37,7 @@ float4 main(PS_INPUT input) : SV_TARGET
     float intensity;
     float4 color;
     
-    intensity = dot(-(normalize(gPassData.light.direction)), normalize(input.normal));
+    intensity = dot(-(gPassData.light.direction), normalize(input.normal));
     
     if (intensity > 0.90)
     {

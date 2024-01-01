@@ -59,7 +59,6 @@ namespace Engine {
 		D12Resource mIndexBuffer;
 		std::vector<D12Resource> mMaterialBuffers;
 		std::vector<D12Resource> mObjTransforms;
-		std::vector<D12Resource> mShadowTransform;
 
 		D12Resource mCBPassData;
 		Render::Light mLights[8];

@@ -59,9 +59,8 @@ namespace Engine {
 
 	void HLSLShader::Release()
 	{
-		if (mByteCode && mByteCode->GetBufferPointer()) {
+		if (mByteCode->GetBufferPointer()) {
 			mByteCode->Release();
-			mByteCode = nullptr;
 
 		}
 	}
