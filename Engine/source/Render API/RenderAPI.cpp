@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "RenderAPI.h"
 
-#include <vector>
+#include <string>
 
 #include "DirectX12/DXGI/DXGIFactory.h"
 #include "DirectX12/DXGI/DXGIAdapter.h"
@@ -247,7 +247,7 @@ namespace Engine {
 
 
 		DirectX::XMMATRIX viewMatrix;
-		viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 8.5f,-8.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+		viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 8.5f,-12.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
 		//DirectX::XMMatrixLookToLH({VEC3 pos},{VEC3 normalizedForward}, {VEC3 normalized updirection});
 
 		DirectX::XMMATRIX projectionMatrix;
@@ -294,6 +294,19 @@ namespace Engine {
 				(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
 
+
+			mMaterialBuffers.emplace_back(D12Resource());
+			mMaterialBuffers[3].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(MaterialCelShader)), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
+			mMaterialBuffers[3]->SetName(L"Material CB 4 (shadows)");
+
+			material;
+			material.diffuseAlbedo = { 0.0f,0.0f,0.0f,0.5f };
+
+			mBufferUploader.Upload((D12Resource*)mMaterialBuffers[3].GetAddressOf(), &material, sizeof(MaterialCelShader),
+				(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+
+
 		}
 
 
@@ -303,24 +316,25 @@ namespace Engine {
 		
 		//Transform allocations
 		{
-
-			
 			mObjTransforms.emplace_back(D12Resource());
 			mObjTransforms[0].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(ObjectData)), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
 			mObjTransforms[0]->SetName(L"Transform 1 CB");
 
 			ObjectData tempData;
 			tempData.transform.r[3] = { 0.0f,1.0f,0.0f,1.0f };
+			mObjTransformsCPU.push_back(tempData);
 
 			memcpy(mObjTransforms[0].GetCPUMemory(), &tempData, sizeof(ObjectData));
 
 			mObjTransforms.emplace_back(D12Resource());
 			mObjTransforms[1].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(ObjectData)), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
 			mObjTransforms[1]->SetName(L"Transform 2 CB");
+
+			tempData.transform = DirectX::XMMatrixIdentity();
 			tempData.transform.r[0] = { .3f,0.0f,1.0f,0.0f };
+			tempData.transform.r[3] = { -6.0f,3.5f,-3.0f,1.0f };
 
-			tempData.transform.r[3] = { -3.0f,1.0f,-2.0f,1.0f };
-
+			mObjTransformsCPU.push_back(tempData);
 
 			memcpy(mObjTransforms[1].GetCPUMemory(), &tempData, sizeof(ObjectData));
 
@@ -335,22 +349,42 @@ namespace Engine {
 			tempData.transform.r[2] = { 0.0,0.0,1000.0f,0.0f };
 			tempData.transform.r[3] = { 0.0f,-1.0f,0.0f,1.0f };
 
+			mObjTransformsCPU.push_back(tempData);
+
 			memcpy(mObjTransforms[2].GetCPUMemory(), &tempData, sizeof(ObjectData));
 
 		}
 
+		//Shadow transforms
+		{
+			mShadowTransforms.resize(mObjTransforms.size());
+
+
+			for (int i = 0; i < mObjTransforms.size(); i++) {
+				mShadowTransforms[i].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(ObjectData)), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
+				std::wstring name = L"Shadow transform buffer ";
+				name.append(std::to_wstring(i));
+
+				mShadowTransforms[i]->SetName(name.c_str());
+
+				ObjectData tempData;
+
+				memcpy(mShadowTransforms[i].GetCPUMemory(), &tempData, sizeof(ObjectData));
+
+
+			}
+
+
+
+		}
 		/*
 
 		Projects:
-		- Planar shadows
 		- System: Timer / timestep
 
 
 		NEW VIDEO PLAN:
 
-
-		Ep. 26:
-		- Implement shadows using shaders and shadow pipeline
 
 		Ep. 27:
 		- Implement timestep and some basic animations
@@ -365,90 +399,138 @@ namespace Engine {
 
 	void RenderAPI::UpdateDraw()
 	{
-		memcpy(mCBPassData.GetCPUMemory(), &mViewProjectionMatrix, sizeof(PassData::viewproject));
-		memcpy((BYTE*)mCBPassData.GetCPUMemory()+sizeof(PassData::viewproject), &mLights[0], sizeof(Light));
+		//Update buffers
+		{
+			memcpy(mCBPassData.GetCPUMemory(), &mViewProjectionMatrix, sizeof(PassData::viewproject));
+			memcpy((BYTE*)mCBPassData.GetCPUMemory() + sizeof(PassData::viewproject), &mLights[0], sizeof(Light));
+			
+			DirectX::XMVECTOR planeToCastShadow = { 0.0f,1.0f,0.0f,0.0f };
+			DirectX::XMVECTOR dirToLightSource = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&mLights[0].direction));
+
+			DirectX::XMMATRIX shadowMatrix = DirectX::XMMatrixShadow(planeToCastShadow, dirToLightSource);
+			DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.001f, 0.0f);
+
+
+			for (int i = 0; i < mShadowTransforms.size(); i++) {
+				ObjectData tempData;
+				tempData.transform = mObjTransformsCPU[i].transform * shadowMatrix * translation;
+				memcpy(mShadowTransforms[i].GetCPUMemory(), &tempData, sizeof(ObjectData));
+
+			}
+
+		}
+
+
 
 		
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
-		barrier.Transition.Subresource = 0;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-		mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
-
-		const float clearColor[] = {  0.0f,0.0f,0.0f,1.0f };
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mSwapChain.GetCurrentRTVHandle();
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = mDepthDescHeap->GetCPUDescriptorHandleForHeapStart();
-
-		mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle, clearColor, 0, 0);
-		mCommandList.GFXCmd()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, 0);
-		mCommandList.GFXCmd()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
-
-		mCommandList.GFXCmd()->RSSetViewports(1, &mViewport);
-		mCommandList.GFXCmd()->RSSetScissorRects(1, &mSRRect);
-
-		mCommandList.GFXCmd()->SetGraphicsRootSignature(mBasePipeline.GetRS());
-		mCommandList.GFXCmd()->SetPipelineState(mBasePipeline.Get());
-		mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		mCommandList.GFXCmd()->IASetVertexBuffers(0, 1, &mVBView);
-		mCommandList.GFXCmd()->IASetIndexBuffer(&mIBView);
-
-		//Draw call
+		//Draw frame
 		{
+			D3D12_RESOURCE_BARRIER barrier = {};
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
+			barrier.Transition.Subresource = 0;
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+			mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
+
+			const float clearColor[] = { 0.0f,0.0f,0.0f,1.0f };
+			D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mSwapChain.GetCurrentRTVHandle();
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = mDepthDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+			mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle, clearColor, 0, 0);
+			mCommandList.GFXCmd()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, 0);
+			mCommandList.GFXCmd()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
+			mCommandList.GFXCmd()->RSSetViewports(1, &mViewport);
+			mCommandList.GFXCmd()->RSSetScissorRects(1, &mSRRect);
+
+			mCommandList.GFXCmd()->SetGraphicsRootSignature(mBasePipeline.GetRS());
+			mCommandList.GFXCmd()->SetPipelineState(mBasePipeline.Get());
+			mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			mCommandList.GFXCmd()->IASetVertexBuffers(0, 1, &mVBView);
+			mCommandList.GFXCmd()->IASetIndexBuffer(&mIBView);
 			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[0].Get()->GetGPUVirtualAddress());
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[0].Get()->GetGPUVirtualAddress());
+
+			//Draw call
+			{
+
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[0].Get()->GetGPUVirtualAddress());
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[0].Get()->GetGPUVirtualAddress());
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
+			}
 
 
-			mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
+			{
+
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[1].Get()->GetGPUVirtualAddress());
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[1].Get()->GetGPUVirtualAddress());
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
+			}
+
+			//draw a floor
+			{
+
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[2].Get()->GetGPUVirtualAddress());
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[2].Get()->GetGPUVirtualAddress());
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
+			}
+
+			mCommandList.GFXCmd()->SetPipelineState(mPlanarShadowPipeline.Get());
+			mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+			//Draw call
+			{
+
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[0].Get()->GetGPUVirtualAddress());
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
+			}
+
+
+			{
+
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[1].Get()->GetGPUVirtualAddress());
+				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
+			}
+
+
+
+
+			barrier = {};
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
+			barrier.Transition.Subresource = 0;
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+
+			mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
+
+
+			mCommandList.GFXCmd()->Close();
+			mCommandQueue.M_ExecuteCommandList(mCommandList.Get());
+
+			mSwapChain.Present();
+
+			while (mCommandQueue.GetFence()->GetCompletedValue() < mCommandQueue.M_GetCurrentFenceValue()) {
+
+				_mm_pause();
+			}
+
+			mCommandList.ResetCommandList();
+
 		}
-	
-
-		{
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[1].Get()->GetGPUVirtualAddress());
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[1].Get()->GetGPUVirtualAddress());
-
-
-			mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
-		}
-
-		//draw a floor
-		{
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[2].Get()->GetGPUVirtualAddress());
-			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[2].Get()->GetGPUVirtualAddress());
-
-
-			mCommandList.GFXCmd()->DrawIndexedInstanced(G_INDICES, 1, 0, 0, 0);
-		}
-
-		barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
-		barrier.Transition.Subresource = 0;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-
-		mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
-
-
-		mCommandList.GFXCmd()->Close();
-		mCommandQueue.M_ExecuteCommandList(mCommandList.Get());
-
-		mSwapChain.Present();
-
-		while (mCommandQueue.GetFence()->GetCompletedValue() < mCommandQueue.M_GetCurrentFenceValue()) {
-
-			_mm_pause();
-		}
-
-		mCommandList.ResetCommandList();
+		
 	}
 
 	void RenderAPI::Release()
