@@ -14,6 +14,8 @@
 #include "DirectX12/Descriptors/D12DescriptorHeap.h"
 #include "DirectX12/MemoryManagement/BufferUploader.h"
 
+#include "../ModelLoading/ModelLoaderApi.h"
+
 
 namespace Engine {
 
@@ -30,6 +32,8 @@ namespace Engine {
 
 		void Release();
 
+	private:
+		ModelLoaderApi mModelLoader;
 	private:
 
 		D12Device mDevice;

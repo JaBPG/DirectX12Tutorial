@@ -84,6 +84,9 @@
     <ClInclude Include="source\System\Timers\TimeStep.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="source\ModelLoading\ModelLoaderApi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\pch.cpp">
@@ -141,6 +144,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\System\Timers\TimeStep.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ModelLoading\ModelLoaderApi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

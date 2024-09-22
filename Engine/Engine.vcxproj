@@ -51,12 +51,15 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)\source;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\libraries\FBX\2020.3.7\include;$(ProjectDir)\source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>G:\libraries\FBX\2020.3.7\lib\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies); libfbxsdk-md.lib;  libxml2-md.lib; zlib-md.lib;  wininet.lib;</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -69,7 +72,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)\source;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\libraries\FBX\2020.3.7\include;$(ProjectDir)\source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -77,9 +80,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>G:\libraries\FBX\2020.3.7\lib\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies); libfbxsdk-md.lib;  libxml2-md.lib; zlib-md.lib; </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\ModelLoading\ModelLoaderApi.h" />
     <ClInclude Include="source\Render API\DirectX12\MemoryManagement\BufferUploader.h" />
     <ClInclude Include="source\Render API\DirectX12\Descriptors\D12DescriptorHeap.h" />
     <ClInclude Include="source\Render API\DirectX12\Pipeline\D12PipelineState.h" />
@@ -105,6 +111,7 @@
     <ClInclude Include="source\Utilities\Utilities.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\ModelLoading\ModelLoaderApi.cpp" />
     <ClCompile Include="source\Render API\DirectX12\MemoryManagement\BufferUploader.cpp" />
     <ClCompile Include="source\Render API\DirectX12\Descriptors\D12DescriptorHeap.cpp" />
     <ClCompile Include="source\Render API\DirectX12\Pipeline\D12PipelineState.cpp" />
