@@ -58,22 +58,21 @@ namespace Engine {
 		std::vector<Vertex> vertices;
 		std::vector<UINT32> indices;
 
-		mModelLoader.LoadFBXModel("models/test.fbx", vertices, indices);
+		mModelLoader.LoadFBXModel("models/test.fbx", vertices, indices,mMeshes);
 
 
-		mVertexBuffer.Initialize(mDevice.Get(), KBs(8), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
+		mVertexBuffer.Initialize(mDevice.Get(), KBs(64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
 		mVertexBuffer.Get()->SetName(L"Vertex buffer");
-
 
 		mBufferUploader.Upload((D12Resource*)mVertexBuffer.GetAddressOf(), vertices.data(), sizeof(Vertex) * vertices.size(),
 			(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
 		mVBView.BufferLocation = mVertexBuffer.Get()->GetGPUVirtualAddress();
 		mVBView.StrideInBytes = sizeof(Vertex);
-		mVBView.SizeInBytes = KBs(8);
+		mVBView.SizeInBytes = KBs(64);
 
 		
-		mIndexBuffer.Initialize(mDevice.Get(), KBs(16), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
+		mIndexBuffer.Initialize(mDevice.Get(), KBs(64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
 		mIndexBuffer->SetName(L"Index buffer");
 
 
@@ -81,7 +80,7 @@ namespace Engine {
 			(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf());
 		mIBView.BufferLocation = mIndexBuffer.Get()->GetGPUVirtualAddress();
 		mIBView.Format = DXGI_FORMAT_R32_UINT;
-		mIBView.SizeInBytes = KBs(16);
+		mIBView.SizeInBytes = KBs(64);
 
 
 
@@ -250,10 +249,6 @@ namespace Engine {
 
 		}
 
-
-		
-
-
 	}
 
 	void RenderAPI::UpdateDraw(const float ts)
@@ -348,7 +343,10 @@ namespace Engine {
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[0].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[0].Get()->GetGPUVirtualAddress());
 
-				mCommandList.GFXCmd()->DrawIndexedInstanced(3, 1, 0, 0, 0);
+				Render::MeshDrawData* drawdata = &mMeshes[0];
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
 			}
 
 
@@ -357,7 +355,10 @@ namespace Engine {
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[1].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[1].Get()->GetGPUVirtualAddress());
 
-				mCommandList.GFXCmd()->DrawIndexedInstanced(3, 1, 0, 0, 0);
+				Render::MeshDrawData* drawdata = &mMeshes[1];
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
 			}
 
 			//draw a floor
@@ -366,7 +367,10 @@ namespace Engine {
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[2].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[2].Get()->GetGPUVirtualAddress());
 
-				mCommandList.GFXCmd()->DrawIndexedInstanced(3, 1, 0, 0, 0);
+				Render::MeshDrawData* drawdata = &mMeshes[2];
+
+				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
 			}
 
 			mCommandList.GFXCmd()->SetPipelineState(mPlanarShadowPipeline.Get());
@@ -379,7 +383,10 @@ namespace Engine {
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[0].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
 
-				mCommandList.GFXCmd()->DrawIndexedInstanced(3, 1, 0, 0, 0);
+				Render::MeshDrawData* drawdata = &mMeshes[0];
+
+				//mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
 			}
 
 
@@ -388,7 +395,10 @@ namespace Engine {
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[1].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
 
-				mCommandList.GFXCmd()->DrawIndexedInstanced(3, 1, 0, 0, 0);
+				Render::MeshDrawData* drawdata = &mMeshes[0];
+
+				//mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
 			}
 
 

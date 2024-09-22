@@ -23,7 +23,18 @@ namespace Engine {
 		return FbxVector4();
 	}
 
-	void ModelLoaderApi::LoadFBXModel(const char* filepath, std::vector<Render::Vertex>& outVertices, std::vector<UINT32>& outIndices)
+	bool CompareVertex(Render::Vertex& a, Render::Vertex& b) {
+		if (a.position.x == b.position.x && a.position.y == b.position.y && a.position.z == b.position.z) {
+			if (a.normal.x == b.normal.x && a.normal.y == b.normal.y && a.normal.z == b.normal.z) {
+
+				return true;
+			}
+
+		}
+		return false;
+	}
+
+	void ModelLoaderApi::LoadFBXModel(const char* filepath, std::vector<Render::Vertex>& outVertices, std::vector<UINT32>& outIndices, std::vector<Render::MeshDrawData>& outMeshes)
 	{
 
 		FbxManager* manager = FbxManager::Create();
@@ -49,8 +60,12 @@ namespace Engine {
 		importer->Destroy();
 
 
-		unsigned int totalvertices = 0;
-		unsigned int totalindices = 0;
+		std::vector<Render::Vertex> totalvertices;
+		std::vector<UINT32> totalindices;
+
+		size_t vertexoffset = 0;
+		size_t indexoffset = 0;
+
 
 		for (int geometry = 0; geometry < scene->GetGeometryCount(); geometry++) {
 
@@ -59,56 +74,132 @@ namespace Engine {
 			FbxMesh* mesh = static_cast<FbxMesh*>(scene->GetGeometry(geometry));
 
 
+			std::vector<Render::Vertex> meshvertices;
+			std::vector<UINT32> meshindices;
 
-			std::vector<DirectX::XMFLOAT3> verticespositions;
-			verticespositions.reserve(mesh->GetControlPointsCount());
+			const int facecount = mesh->GetPolygonCount();
+			FbxVector4* controlpoints = mesh->GetControlPoints();
+			const int contronpointcount = mesh->GetControlPointsCount();
 
-			std::vector<UINT32> indices;
-			std::vector<UINT32> normalindcies;
+			unsigned int vtx = 0;
 
-			std::vector<DirectX::XMFLOAT3> polygonnormals;
+			for (int face = 0; face < facecount; face++) {
+				const int facervertexcount = mesh->GetPolygonSize(face);
 
-			/* Create the vertices */
-			for (int i = 0; i < mesh->GetControlPointsCount(); i++) {
-				const FbxVector4& position = mesh->GetControlPointAt(i);
+				for (int facevtx = 0; facevtx < facervertexcount; facevtx++) {
 
-				//Render::Vertex vertex;
-				DirectX::XMFLOAT3 positiondx = { (float)position[0],(float)position[1],(float)position[2] };
-				verticespositions.emplace_back(positiondx);
-			}
+					const int controlpointidx = mesh->GetPolygonVertex(face, facevtx);
 
-			
-			/* Create indices and normals */
-			for (int polygon = 0; polygon < mesh->GetPolygonCount(); polygon++) {
-				const int polygonsize = mesh->GetPolygonSize(polygon);
+					Render::Vertex vertex;
+					const FbxVector4& positondata = controlpoints[controlpointidx];
 
-				for (int polyvert = 0; polyvert < polygonsize; polyvert++) {
-
-					UINT32 idx = mesh->GetPolygonVertex(polygon, polyvert);
-				
-					FbxGeometryElementNormal* ntest = mesh->GetElementNormal();
-					ntest->RemapIndexTo(FbxLayerElement::eByControlPoint);
+					vertex.position = { (float)positondata[0],(float)positondata[1],(float)positondata[2] };
 
 
-					indices.emplace_back(idx);
+					const int normalcount = mesh->GetElementNormalCount();
 
-					totalindices++;
+					for (int normalelem = 0; normalelem < normalcount; normalelem++) {
+						FbxGeometryElementNormal* pnormal = mesh->GetElementNormal(normalelem);
 
-					//const FbxVector4& normalvec4 = GetNormal(mesh->GetElementNormal(),idx);
-					const FbxVector4& normalvec4 = GetNormal(ntest,idx);
+						const FbxVector4& normaldata = GetNormal(pnormal, vtx);
 
-					DirectX::XMFLOAT3 normal = { (float)normalvec4[0],(float)normalvec4[1],(float)normalvec4[2] };
+						vertex.normal = { (float)normaldata[0],(float)normaldata[1],(float)normaldata[2] };
+					}
 
-					polygonnormals.emplace_back(normal);
+
+					const size_t meshvtxcnt = meshvertices.size();
+					size_t i = 0;
+					for (i = 0; i < meshvtxcnt; i++) {
+						if (CompareVertex(vertex, meshvertices[i])) {
+							break;
+						}
+					}
+
+					if (i == meshvtxcnt) {
+
+						meshvertices.emplace_back(vertex);
+					}
+
+					meshindices.push_back(i);
+					vtx++;
 				}
-				
-
-			}
 			
+			}
+
+			Render::MeshDrawData meshdrawdata;
+
+			meshdrawdata.vertexoffset = vertexoffset;
+			meshdrawdata.vertexcount = meshvertices.size();
+			meshdrawdata.indexoffset = indexoffset;
+			meshdrawdata.indexcount = meshindices.size();
+		
+			outMeshes.emplace_back(meshdrawdata);
+
+
+			vertexoffset += meshdrawdata.vertexcount;
+			indexoffset += meshdrawdata.indexcount;
+
+			totalvertices.insert(totalvertices.end(), meshvertices.begin(), meshvertices.end());
+			totalindices.insert(totalindices.end(), meshindices.begin(), meshindices.end());
+
 			PRINT_N("Loaded model!");
 			
 		}
 
+		outVertices = std::move(totalvertices);
+		outIndices = std::move(totalindices);
+
 	}
 
 }
+
+
+
+
+/* Create the vertices */
+
+/*
+for (int i = 0; i < mesh->GetControlPointsCount(); i++) {
+	const FbxVector4& position = mesh->GetControlPointAt(i);
+
+	//Render::Vertex vertex;
+	DirectX::XMFLOAT3 positiondx = { (float)position[0],(float)position[1],(float)position[2] };
+	verticespositions.emplace_back(positiondx);
+}
+
+*/
+/* Create indices and normals */
+/*
+for (int polygon = 0; polygon < mesh->GetPolygonCount(); polygon++) {
+	const int polygonsize = mesh->GetPolygonSize(polygon);
+
+	for (int polyvert = 0; polyvert < polygonsize; polyvert++) {
+
+		UINT32 idx = mesh->GetPolygonVertex(polygon, polyvert);
+
+		FbxGeometryElementNormal* ntest = mesh->GetElementNormal();
+
+		const auto data = ntest->GetDirectArray();
+
+		const auto mapping = ntest->GetMappingMode();
+		const auto refmode = ntest->GetReferenceMode();
+
+		//ntest->RemapIndexTo(FbxLayerElement::eByControlPoint);
+
+
+		indices.emplace_back(idx);
+
+		totalindices++;
+
+		const FbxVector4& normalvec4 = GetNormal(mesh->GetElementNormal(),idx);
+		//const FbxVector4& normalvec4 = GetNormal(ntest,idx);
+
+		DirectX::XMFLOAT3 normal = { (float)normalvec4[0],(float)normalvec4[1],(float)normalvec4[2] };
+
+		polygonnormals.emplace_back(normal);
+	}
+
+
+}
+
+*/

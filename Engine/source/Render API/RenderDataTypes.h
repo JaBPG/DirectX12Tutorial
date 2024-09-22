@@ -15,6 +15,13 @@ namespace Engine {
 		};
 
 
+		struct MeshDrawData {
+			UINT32 vertexcount = 0;
+			UINT32 vertexoffset = 0;
+			UINT32 indexcount = 0;
+			UINT32 indexoffset = 0;
+
+		};
 
 		struct Vertex {
 			DirectX::XMFLOAT3 position = { 0.0f,0.0f,0.0f };

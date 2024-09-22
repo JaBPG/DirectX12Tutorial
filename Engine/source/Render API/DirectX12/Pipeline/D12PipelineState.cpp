@@ -41,7 +41,7 @@ namespace Engine {
 
 		desc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 		desc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK; //might do none
-		desc.RasterizerState.FrontCounterClockwise = true;
+		desc.RasterizerState.FrontCounterClockwise = false;
 		desc.RasterizerState.DepthClipEnable = true;
 		desc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 

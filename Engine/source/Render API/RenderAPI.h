@@ -70,6 +70,9 @@ namespace Engine {
 
 		D12Resource mCBPassData;
 		Render::Light mLights[8];
+
+		std::vector<Render::MeshDrawData> mMeshes;
+
 	private: 
 		UINT mWidth = 0;
 		UINT mHeight = 0;

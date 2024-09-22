@@ -10,7 +10,7 @@ namespace Engine {
 		ModelLoaderApi() = default;
 
 
-		void LoadFBXModel(const char* filepath, std::vector<Render::Vertex>& outVertices, std::vector<UINT32>& outIndices);
+		void LoadFBXModel(const char* filepath, std::vector<Render::Vertex>& outVertices, std::vector<UINT32>& outIndices, std::vector<Render::MeshDrawData>& outMeshes);
 
 	};
 
