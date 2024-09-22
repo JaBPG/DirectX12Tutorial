@@ -1,3 +1,5 @@
+#include "../Common.hlsli"
+
 struct PS_INPUT //from the VS_OUTPUT
 {
 	
@@ -6,30 +8,12 @@ struct PS_INPUT //from the VS_OUTPUT
 	
 };
 
-
-
 struct MaterialData
 {
     float4 diffuseAlbedo;
     
 };
 
-struct LightData
-{
-    float3 position;
-    float strength;
-    float3 direction;
-    float padding;
-
-};
-
-struct PassData
-{
-    float4x4 viewproj;
-    LightData light;
-};
-
-ConstantBuffer<PassData> gPassData : register(b0);
 ConstantBuffer<MaterialData> gMaterialData : register(b2);
 
 float4 main(PS_INPUT input) : SV_TARGET

@@ -36,7 +36,7 @@ namespace Engine {
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-		desc.NumDescriptors = 1;
+		desc.NumDescriptors = numdescriptors;
 		desc.NodeMask = 0;
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 

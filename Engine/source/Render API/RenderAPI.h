@@ -22,7 +22,7 @@ namespace Engine {
 	class YT_API RenderAPI
 	{
 
-	public: 
+	public:
 		RenderAPI() = default;
 		~RenderAPI();
 
@@ -40,23 +40,24 @@ namespace Engine {
 		D12CommandList mCommandList;
 		DXGISwapChain mSwapChain;
 
-		D3D12_VIEWPORT mViewport;
-		D3D12_RECT mSRRect;
+		D3D12_VIEWPORT mViewport[2];
+		D3D12_RECT mSRRect[2];
 
 		//old pipelinestuff
-		D12PipelineState mBasePipeline;
-		D12PipelineState mPlanarShadowPipeline;
+		//D12PipelineState mBasePipeline;
+		//D12PipelineState mPlanarShadowPipeline;
 		
 		//new deferred stuff
 		D12PipelineState mDeferredPipeline;
 		D12PipelineState mDeferredPixelPipeline;
 		D12DescriptorHeap mDeferredRenderTargetsDescHeap;
-		D12DescriptorHeap mDeferredSRVsDescHeap;
 		D12Resource mDeferredOutputTextures[3];
 		
-		
+		D12PipelineState mShadowMapPipeline;
 
-		D12Resource mDepthBuffer;
+
+		D12DescriptorHeap mCBSRVUAVDescHeap;
+		D12Resource mDepthBuffers[2];
 		D12DescriptorHeap mDepthDescHeap;
 		
 
@@ -76,7 +77,7 @@ namespace Engine {
 
 		std::vector<Render::ObjectData> mObjTransformsCPU;
 
-		std::vector<D12Resource> mShadowTransforms;
+		//std::vector<D12Resource> mShadowTransforms;
 
 		D12Resource mCBPassData;
 		Render::Light mLights[8];

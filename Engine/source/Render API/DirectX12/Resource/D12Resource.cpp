@@ -116,7 +116,7 @@ namespace Engine {
 
 	}
 
-	void D12Resource::InitializeAsDepthBuffer(ID3D12Device* pDevice, const unsigned int width, const unsigned int height)
+	void D12Resource::InitializeAsDepthBuffer(ID3D12Device* pDevice, const unsigned int width, const unsigned int height, const DXGI_FORMAT format)
 	{
 		D3D12_HEAP_PROPERTIES heapProp = {};
 		heapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -132,13 +132,13 @@ namespace Engine {
 		resDesc.Height = height;
 		resDesc.DepthOrArraySize = 1;
 		resDesc.MipLevels = 0;
-		resDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		resDesc.Format = format;
 		resDesc.SampleDesc = { 1,0 };
 		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 		resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 		D3D12_CLEAR_VALUE clearValue = {};
-		clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		clearValue.Format = format;
 		clearValue.DepthStencil.Depth = 1.0f;
 		clearValue.DepthStencil.Stencil = 0.0f;
 

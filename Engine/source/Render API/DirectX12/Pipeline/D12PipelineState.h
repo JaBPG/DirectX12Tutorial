@@ -15,6 +15,7 @@ namespace Engine {
 		void InitializeDeferred(ID3D12Device* pDevice);
 		void InitializePixelProces(ID3D12Device* pDevice, std::wstring pixelshaderpath);
 
+		void InitializeShadowMapping(ID3D12Device* pDevice);
 		void InitializeAsTransparent(ID3D12Device* pDevice);
 
 		void Release(); 

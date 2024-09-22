@@ -2,6 +2,7 @@
 #include <exception>
 
 #define KBs(x) 1024* (x)
+#define MBs(x) 1024* KBs(x)
 
 
 

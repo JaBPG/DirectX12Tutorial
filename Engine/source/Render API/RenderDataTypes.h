@@ -42,6 +42,7 @@ namespace Engine {
 
 		struct PassData {
 			DirectX::XMMATRIX viewproject = DirectX::XMMatrixIdentity();
+			DirectX::XMMATRIX lightviewproject = DirectX::XMMatrixIdentity();
 			Light scenelight;
 		};
 
