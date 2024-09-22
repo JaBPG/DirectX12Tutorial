@@ -49,6 +49,7 @@ namespace Engine {
 		
 		//new deferred stuff
 		D12PipelineState mDeferredPipeline;
+		D12PipelineState mDeferredPixelPipeline;
 		D12DescriptorHeap mDeferredRenderTargetsDescHeap;
 		D12DescriptorHeap mDeferredSRVsDescHeap;
 		D12Resource mDeferredOutputTextures[3];

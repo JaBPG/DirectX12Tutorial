@@ -25,7 +25,7 @@ namespace Engine {
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		desc.NumDescriptors = numdescriptors;
 		desc.NodeMask = 0;
-		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 		YT_EVAL_HR(pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(GetAddressOf())), "Error creating descriptor heap");
 

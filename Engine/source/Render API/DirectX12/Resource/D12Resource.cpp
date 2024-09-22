@@ -84,10 +84,17 @@ namespace Engine {
 		resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 		resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
+		float clearColor[] = { 0.0f,0.0f,0.0f,1.0f };
+
 		D3D12_CLEAR_VALUE clearValue = {};
 		clearValue.Format = format;
-		clearValue.DepthStencil.Depth = 1.0f;
-		clearValue.DepthStencil.Stencil = 0.0f;
+		clearValue.Color[0] = 0.0f;
+		clearValue.Color[1] = 0.0f;
+		clearValue.Color[2] = 0.0f;
+		clearValue.Color[3] = 0.0f;
+
+		//clearValue.DepthStencil.Depth = 1.0f;
+		//clearValue.DepthStencil.Stencil = 0.0f;
 
 		YT_EVAL_HR(pDevice->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(GetAddressOf())), "Error creating texture resource");
 

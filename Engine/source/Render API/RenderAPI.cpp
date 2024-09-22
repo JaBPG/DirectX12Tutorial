@@ -128,6 +128,9 @@ namespace Engine {
 		mDeferredPipeline.InitializeDeferred(mDevice.Get());
 		mDeferredPipeline->SetName(L"Deferred pipeline PSO");
 
+		mDeferredPixelPipeline.InitializePixelProces(mDevice.Get(), L"shaders/postfx/deferredlights/PS.hlsl");
+		mDeferredPixelPipeline->SetName(L"Deferred pixel pipeline PSO");
+
 		/* old stuff, will be removed */
 		mBasePipeline.Initialize(mDevice.Get());
 		mPlanarShadowPipeline.InitializeAsTransparent(mDevice.Get());
@@ -135,45 +138,54 @@ namespace Engine {
 
 
 		/* regular depth stuff */
-		mDepthBuffer.InitializeAsDepthBuffer(mDevice.Get(), mWidth, mHeight);
-		mDepthBuffer->SetName(L"Depth buffer");
+		{
+			mDepthBuffer.InitializeAsDepthBuffer(mDevice.Get(), mWidth, mHeight);
+			mDepthBuffer->SetName(L"Depth buffer");
 
-		mDepthDescHeap.InitializeDepthHeap(mDevice.Get(),1);
-		mDepthDescHeap->SetName(L"Depth descriptor heap");
+			mDepthDescHeap.InitializeDepthHeap(mDevice.Get(), 1);
+			mDepthDescHeap->SetName(L"Depth descriptor heap");
 
-		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-		dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		dsvDesc.Texture2D.MipSlice = 0;
-		dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-
-		mDevice->CreateDepthStencilView(mDepthBuffer.Get(), &dsvDesc, mDepthDescHeap.Get()->GetCPUDescriptorHandleForHeapStart());
-
-		mViewport.TopLeftX = 0;
-		mViewport.TopLeftY = 0;
-		mViewport.Width = mWidth;
-		mViewport.Height = mHeight;
-		mViewport.MinDepth = 0.0f;
-		mViewport.MaxDepth = 1.0f;
-
-		mSRRect.left = 0;
-		mSRRect.right = mViewport.Width;
-		mSRRect.top = 0;
-		mSRRect.bottom = mViewport.Height;
+			D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+			dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+			dsvDesc.Texture2D.MipSlice = 0;
+			dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
 
-
-		DirectX::XMMATRIX viewMatrix;
-		viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 8.5f,-17.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
-		//DirectX::XMMatrixLookToLH({VEC3 pos},{VEC3 normalizedForward}, {VEC3 normalized updirection});
-
-		DirectX::XMMATRIX projectionMatrix;
-		projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(1.2217304764f, 16.0f / 9.0f, 1.0f, 50.0f);
-
-		mViewProjectionMatrix = viewMatrix * projectionMatrix;
+			mDevice->CreateDepthStencilView(mDepthBuffer.Get(), &dsvDesc, mDepthDescHeap.Get()->GetCPUDescriptorHandleForHeapStart());
+		}
 		
-		mCBPassData.Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(PassData)), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
+		/* viewport and scissor rect */
+		{
+			mViewport.TopLeftX = 0;
+			mViewport.TopLeftY = 0;
+			mViewport.Width = mWidth;
+			mViewport.Height = mHeight;
+			mViewport.MinDepth = 0.0f;
+			mViewport.MaxDepth = 1.0f;
+
+			mSRRect.left = 0;
+			mSRRect.right = mViewport.Width;
+			mSRRect.top = 0;
+			mSRRect.bottom = mViewport.Height;
+		}
+
+
+		/* camera matrix stuff */
+		{
+			DirectX::XMMATRIX viewMatrix;
+			viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 8.5f,-17.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+			//DirectX::XMMatrixLookToLH({VEC3 pos},{VEC3 normalizedForward}, {VEC3 normalized updirection});
+
+			DirectX::XMMATRIX projectionMatrix;
+			projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(1.2217304764f, 16.0f / 9.0f, 1.0f, 50.0f);
+
+			mViewProjectionMatrix = viewMatrix * projectionMatrix;
+
+			mCBPassData.Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(PassData)), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
+
+		}
+
 
 		//material allocations
 
@@ -226,7 +238,6 @@ namespace Engine {
 
 
 		}
-
 
 		mLights[0].position = { 0.0f,0.0f,0.0f };
 		mLights[0].strength = 1.0f;
@@ -327,8 +338,6 @@ namespace Engine {
 
 		}
 
-
-
 		//Update buffers
 		{
 			memcpy(mCBPassData.GetCPUMemory(), &mViewProjectionMatrix, sizeof(PassData::viewproject));
@@ -351,64 +360,64 @@ namespace Engine {
 		}
 
 
-
-		
 		//Draw frame
 		{
-			D3D12_RESOURCE_BARRIER barrier = {};
-			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
-			barrier.Transition.Subresource = 0;
-			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-			mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
-
-			const float clearColor[] = { 0.0f,0.0f,0.0f,1.0f };
-			D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mSwapChain.GetCurrentRTVHandle();
-			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = mDepthDescHeap->GetCPUDescriptorHandleForHeapStart();
-
-			mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle, clearColor, 0, 0);
-			mCommandList.GFXCmd()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, 0);
-			mCommandList.GFXCmd()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
-
 			mCommandList.GFXCmd()->RSSetViewports(1, &mViewport);
 			mCommandList.GFXCmd()->RSSetScissorRects(1, &mSRRect);
 
-			mCommandList.GFXCmd()->SetGraphicsRootSignature(mBasePipeline.GetRS());
-			mCommandList.GFXCmd()->SetPipelineState(mBasePipeline.Get());
-			mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			ID3D12DescriptorHeap* descriptorheaps[1] = { mDeferredSRVsDescHeap.Get() };
 
+			mCommandList.GFXCmd()->SetDescriptorHeaps(1, descriptorheaps);
+
+			
+			mCommandList.GFXCmd()->SetGraphicsRootSignature(mDeferredPipeline.GetRS());
+			mCommandList.GFXCmd()->SetPipelineState(mDeferredPipeline.Get());
+			mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			mCommandList.GFXCmd()->IASetVertexBuffers(0, 1, &mVBView);
 			mCommandList.GFXCmd()->IASetIndexBuffer(&mIBView);
+
+
+			const float clearColor[] = { 0.0f,0.0f,0.0f,0.0f };
+
+			D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle[3] = {	mDeferredRenderTargetsDescHeap.GetCPUHandle(0),
+															mDeferredRenderTargetsDescHeap.GetCPUHandle(1),
+															mDeferredRenderTargetsDescHeap.GetCPUHandle(2) };
+
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = mDepthDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+			mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle[0], clearColor, 0, 0);
+			mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle[1], clearColor, 0, 0);
+			mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle[2], clearColor, 0, 0);
+
+			mCommandList.GFXCmd()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, 0);
+			mCommandList.GFXCmd()->OMSetRenderTargets(3, rtvHandle, false, &dsvHandle);
+
 			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
 
-			//Draw call
-			{
 
+			//first one
+			{
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[0].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[0].Get()->GetGPUVirtualAddress());
 
 				Render::MeshDrawData* drawdata = &mMeshes[0];
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
-
 			}
 
+			//second
 
 			{
-
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[1].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[1].Get()->GetGPUVirtualAddress());
 
 				Render::MeshDrawData* drawdata = &mMeshes[1];
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
-
 			}
 
-			//draw a floor
+
+			//floor 
 			{
 
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[2].Get()->GetGPUVirtualAddress());
@@ -420,58 +429,74 @@ namespace Engine {
 
 			}
 
-			mCommandList.GFXCmd()->SetPipelineState(mPlanarShadowPipeline.Get());
-			mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		
+			D3D12_RESOURCE_BARRIER barrier = {};
 
-			//Draw call
+		
+
+			/* Set our swapchain backbuffer in an rendertarget state*/
 			{
+				barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+				barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+				barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
+				barrier.Transition.Subresource = 0;
+				barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+				barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[0].Get()->GetGPUVirtualAddress());
-				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
-
-				Render::MeshDrawData* drawdata = &mMeshes[0];
-
-				//mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
-
+				mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
 			}
 
+			mCommandList.GFXCmd()->SetGraphicsRootSignature(mDeferredPixelPipeline.GetRS());
+			mCommandList.GFXCmd()->SetPipelineState(mDeferredPixelPipeline.Get());
+			mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			mCommandList.GFXCmd()->IASetVertexBuffers(0, 1, &mVBView);
+			mCommandList.GFXCmd()->IASetIndexBuffer(&mIBView);
+
+
+			/* clear the swapchain and depth buffer and bind it as output */
+			{
+				const float clearColor[] = { 0.0f,0.0f,0.0f,0.0f };
+				D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mSwapChain.GetCurrentRTVHandle();
+			
+				mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle, clearColor, 0, 0);
+				mCommandList.GFXCmd()->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+			}
+
+			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
+			mCommandList.GFXCmd()->SetGraphicsRootDescriptorTable(3, mDeferredSRVsDescHeap.GetGPUHandle(0));
+			mCommandList.GFXCmd()->DrawIndexedInstanced(3, 1, 0, 0, 0);
+
+
+			/* Transition the swapchain backbuffer into a present state */
+			{
+				barrier = {};
+				barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+				barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+				barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
+				barrier.Transition.Subresource = 0;
+				barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+				barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+
+				mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
+			}
+
+			
+			/* Close command list and execute + present */
 
 			{
+				mCommandList.GFXCmd()->Close();
+				mCommandQueue.M_ExecuteCommandList(mCommandList.Get());
 
-				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[1].Get()->GetGPUVirtualAddress());
-				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
+				mSwapChain.Present();
 
-				Render::MeshDrawData* drawdata = &mMeshes[0];
+				while (mCommandQueue.GetFence()->GetCompletedValue() < mCommandQueue.M_GetCurrentFenceValue()) {
 
-				//mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+					_mm_pause();
+				}
 
+				mCommandList.ResetCommandList();
 			}
-
-
-
-			barrier = {};
-			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			barrier.Transition.pResource = mSwapChain.GetCurrentRenderTarget();
-			barrier.Transition.Subresource = 0;
-			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-
-			mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
-
-
-			mCommandList.GFXCmd()->Close();
-			mCommandQueue.M_ExecuteCommandList(mCommandList.Get());
-
-			mSwapChain.Present();
-
-			while (mCommandQueue.GetFence()->GetCompletedValue() < mCommandQueue.M_GetCurrentFenceValue()) {
-
-				_mm_pause();
-			}
-
-			mCommandList.ResetCommandList();
 
 		}
 		
@@ -523,6 +548,85 @@ namespace Engine {
 
 }
 
+
+/*
+
+mCommandList.GFXCmd()->SetGraphicsRootSignature(mBasePipeline.GetRS());
+mCommandList.GFXCmd()->SetPipelineState(mBasePipeline.Get());
+mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+mCommandList.GFXCmd()->IASetVertexBuffers(0, 1, &mVBView);
+mCommandList.GFXCmd()->IASetIndexBuffer(&mIBView);
+mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
+
+*/
+//Draw call
+
+/*
+{
+
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[0].Get()->GetGPUVirtualAddress());
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[0].Get()->GetGPUVirtualAddress());
+
+	Render::MeshDrawData* drawdata = &mMeshes[0];
+
+	mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
+}
+
+
+{
+
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[1].Get()->GetGPUVirtualAddress());
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[1].Get()->GetGPUVirtualAddress());
+
+	Render::MeshDrawData* drawdata = &mMeshes[1];
+
+	mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
+}
+
+//draw a floor
+{
+
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[2].Get()->GetGPUVirtualAddress());
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[2].Get()->GetGPUVirtualAddress());
+
+	Render::MeshDrawData* drawdata = &mMeshes[2];
+
+	mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
+}
+
+mCommandList.GFXCmd()->SetPipelineState(mPlanarShadowPipeline.Get());
+mCommandList.GFXCmd()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+//Draw call
+{
+
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[0].Get()->GetGPUVirtualAddress());
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
+
+	Render::MeshDrawData* drawdata = &mMeshes[0];
+
+	//mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
+}
+
+
+{
+
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mShadowTransforms[1].Get()->GetGPUVirtualAddress());
+	mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
+
+	Render::MeshDrawData* drawdata = &mMeshes[0];
+
+	//mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
+
+}
+
+*/
 
 /*
 #define G_INDICES 36

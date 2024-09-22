@@ -1,4 +1,56 @@
-float4 main( float4 pos : POSITION ) : SV_POSITION
+struct VS_INPUT
 {
-	return pos;
+    float3 position : POSITION;
+    float3 normal : NORMAL;
+    
+};
+
+
+struct VS_OUTPUT
+{
+	
+    float4 positionCS : SV_POSITION;
+    float3 positionWS : POSITION0;
+    float3 normal : NORMAL;
+	
+};
+
+
+struct LightData
+{
+    float3 position;
+    float strenght;
+    float3 direction;
+    float padding;
+
+};
+
+struct PassData
+{
+    float4x4 viewproj;
+    LightData light;
+};
+
+
+struct ObjectData
+{
+    float4x4 transform;
+    
+};
+
+ConstantBuffer<PassData> gPassData : register(b0);
+ConstantBuffer<ObjectData> gObjectData : register(b1);
+
+
+VS_OUTPUT main(VS_INPUT input)
+{
+    VS_OUTPUT output;
+   
+    float4 worldPos = mul(gObjectData.transform, float4(input.position, 1.0f));
+    output.positionWS = worldPos.xyz;
+    output.normal = mul((float3x3) gObjectData.transform, input.normal);
+      
+    output.positionCS = mul(gPassData.viewproj, worldPos);
+     
+    return output;
 }
