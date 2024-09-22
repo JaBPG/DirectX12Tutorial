@@ -20,12 +20,26 @@ namespace Engine {
 
 		void InitializeAsDepthBuffer(ID3D12Device* pDevice, const unsigned int width, const unsigned int height);
 
+		void InitializeAsTexture(ID3D12Device* pDevice, const unsigned int width, const unsigned int height, const DXGI_FORMAT format);
+
 		void Release();
 		void* GetCPUMemory();
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC& GetSRV() { return mView.srv; }
 
 		/* implement move / copy constructor for object since we store it in vectors and they resize */
 
 	private:
+
+		void CreateSRV();
+
+		union View
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC srv;
+		};
+
+		View mView;
+
 		void* mMemory = nullptr;
 	};
 

@@ -35,22 +35,31 @@ namespace Engine {
 	private:
 		ModelLoaderApi mModelLoader;
 	private:
-
 		D12Device mDevice;
 		D12CommandQueue mCommandQueue;
 		D12CommandList mCommandList;
-
 		DXGISwapChain mSwapChain;
-
-		D12PipelineState mBasePipeline;
-		D12PipelineState mPlanarShadowPipeline;
-		D12Resource mDepthBuffer;
-
 
 		D3D12_VIEWPORT mViewport;
 		D3D12_RECT mSRRect;
 
+		//old pipelinestuff
+		D12PipelineState mBasePipeline;
+		D12PipelineState mPlanarShadowPipeline;
+		
+		//new deferred stuff
+		D12PipelineState mDeferredPipeline;
+		D12DescriptorHeap mDeferredRenderTargetsDescHeap;
+		D12DescriptorHeap mDeferredSRVsDescHeap;
+		D12Resource mDeferredOutputTextures[3];
+		
+		
+
+		D12Resource mDepthBuffer;
 		D12DescriptorHeap mDepthDescHeap;
+		
+
+
 		BufferUploader mBufferUploader;
 
 		D3D12_VERTEX_BUFFER_VIEW mVBView;

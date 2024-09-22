@@ -12,13 +12,14 @@ namespace Engine {
 
 		void ResetCommandList();
 
-		inline ID3D12GraphicsCommandList* GFXCmd() { return (ID3D12GraphicsCommandList*)Get(); }
+		inline ID3D12GraphicsCommandList* GFXCmd() { return mGFXList; }
 
 		void Release();
 
 	private:
 
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mAllocator;
+		ID3D12GraphicsCommandList* mGFXList = nullptr;
 
 	};
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "RenderAPI.h"
 
-#include <string>
+
 
 #include "DirectX12/DXGI/DXGIFactory.h"
 #include "DirectX12/DXGI/DXGIAdapter.h"
@@ -22,6 +22,8 @@ namespace Engine {
 
 	RenderAPI::~RenderAPI()
 	{
+
+		/* TODO IMPROVE RELEASE FUNCTION TO CLEAN UP OBJECTS */
 		Release();
 	}
 
@@ -44,55 +46,100 @@ namespace Engine {
 		}
 		/* END DEBUGGING OUTPUT */
 
-		mDevice.Init(adapter.Get());
-		mDevice->SetName(L"Main virtual device");
+		/* ESSENTIALS */
+		{
+			mDevice.Init(adapter.Get());
+			mDevice->SetName(L"Main virtual device");
 
-		mCommandQueue.Initialize(mDevice.Get());
-		mCommandList.Initialize(mDevice.Get());
+			mCommandQueue.Initialize(mDevice.Get());
+			mCommandList.Initialize(mDevice.Get());
 
-		mSwapChain.Initialize(mDevice.Get(), factory.Get(), mCommandQueue.Get(), hwnd, mWidth, mHeight);
+			mSwapChain.Initialize(mDevice.Get(), factory.Get(), mCommandQueue.Get(), hwnd, mWidth, mHeight);
+			mBufferUploader.Initialize(mDevice.Get(), KBs(64));
 
-		mBufferUploader.Initialize(mDevice.Get(), KBs(64));
+		}
 
-		/* LOAD OUR FBX MODEL */
-		std::vector<Vertex> vertices;
-		std::vector<UINT32> indices;
+		/* LOAD OUR FBX MODELS */
+		{
+			std::vector<Vertex> vertices;
+			std::vector<UINT32> indices;
 
-		mModelLoader.LoadFBXModel("models/test.fbx", vertices, indices,mMeshes);
+			mModelLoader.LoadFBXModel("models/test.fbx", vertices, indices, mMeshes);
 
 
-		mVertexBuffer.Initialize(mDevice.Get(), KBs(64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
-		mVertexBuffer.Get()->SetName(L"Vertex buffer");
+			mVertexBuffer.Initialize(mDevice.Get(), KBs(64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
+			mVertexBuffer.Get()->SetName(L"Vertex buffer");
 
-		mBufferUploader.Upload((D12Resource*)mVertexBuffer.GetAddressOf(), vertices.data(), sizeof(Vertex) * vertices.size(),
-			(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+			mBufferUploader.Upload((D12Resource*)mVertexBuffer.GetAddressOf(), vertices.data(), sizeof(Vertex) * vertices.size(),
+				(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
-		mVBView.BufferLocation = mVertexBuffer.Get()->GetGPUVirtualAddress();
-		mVBView.StrideInBytes = sizeof(Vertex);
-		mVBView.SizeInBytes = KBs(64);
+			mVBView.BufferLocation = mVertexBuffer.Get()->GetGPUVirtualAddress();
+			mVBView.StrideInBytes = sizeof(Vertex);
+			mVBView.SizeInBytes = KBs(64);
 
+
+			mIndexBuffer.Initialize(mDevice.Get(), KBs(64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
+			mIndexBuffer->SetName(L"Index buffer");
+
+
+			mBufferUploader.Upload((D12Resource*)mIndexBuffer.GetAddressOf(), indices.data(), sizeof(UINT32) * indices.size(),
+				(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf());
+			mIBView.BufferLocation = mIndexBuffer.Get()->GetGPUVirtualAddress();
+			mIBView.Format = DXGI_FORMAT_R32_UINT;
+			mIBView.SizeInBytes = KBs(64);
+		}
 		
-		mIndexBuffer.Initialize(mDevice.Get(), KBs(64), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
-		mIndexBuffer->SetName(L"Index buffer");
+
+		/* DESCRIPTOR HEAPS */
+		{
+			mDeferredRenderTargetsDescHeap.InitializeRTV(mDevice.Get(), 3); //The deferred pipeline uses 3 rendertagets currently
+			mDeferredRenderTargetsDescHeap->SetName(L"Deferred Descriptor heap");
+			mDeferredSRVsDescHeap.InitializeCBSRVUAV(mDevice.Get(), 3); //should hold our shadowmap stuff in the future, so should have another name eventually and bigger size
+			mDeferredSRVsDescHeap->SetName(L"Main CB, SRV, UAV Descriptor heap");
+
+			D3D12_RESOURCE_BARRIER barrier = {};
+			{
+				barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+				barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+				barrier.Transition.Subresource = 0;
+				barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+				barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			}
+			const unsigned int rendertargets = 3;
+			for (int i = 0; i < rendertargets; i++) {
+
+				mDeferredOutputTextures[i].InitializeAsTexture(mDevice.Get(), width, height, DXGI_FORMAT_R32G32B32A32_FLOAT);
+
+				barrier.Transition.pResource = mDeferredOutputTextures[i].Get();
+				mCommandList.GFXCmd()->ResourceBarrier(1, &barrier);
+
+				mDevice->CreateRenderTargetView(mDeferredOutputTextures[i].Get(), nullptr, mDeferredRenderTargetsDescHeap.GetCPUHandle(i));
+				mDevice->CreateShaderResourceView(mDeferredOutputTextures[i].Get(), &mDeferredOutputTextures[i].GetSRV(), mDeferredSRVsDescHeap.GetCPUHandle(i));
+
+				std::wstring name = L"Deferred rendertarget #";
+				name.append(std::to_wstring(i + 1));
+				mDeferredOutputTextures[i]->SetName(name.c_str());
 
 
-		mBufferUploader.Upload((D12Resource*)mIndexBuffer.GetAddressOf(), indices.data(), sizeof(UINT32) * indices.size(),
-			(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf());
-		mIBView.BufferLocation = mIndexBuffer.Get()->GetGPUVirtualAddress();
-		mIBView.Format = DXGI_FORMAT_R32_UINT;
-		mIBView.SizeInBytes = KBs(64);
+			}
+			
+		}
 
+		mDeferredPipeline.InitializeDeferred(mDevice.Get());
+		mDeferredPipeline->SetName(L"Deferred pipeline PSO");
 
-
-
-	
-
+		/* old stuff, will be removed */
 		mBasePipeline.Initialize(mDevice.Get());
 		mPlanarShadowPipeline.InitializeAsTransparent(mDevice.Get());
 
-		mDepthBuffer.InitializeAsDepthBuffer(mDevice.Get(), mWidth, mHeight);
 
-		mDepthDescHeap.InitializeDepthHeap(mDevice.Get());
+
+		/* regular depth stuff */
+		mDepthBuffer.InitializeAsDepthBuffer(mDevice.Get(), mWidth, mHeight);
+		mDepthBuffer->SetName(L"Depth buffer");
+
+		mDepthDescHeap.InitializeDepthHeap(mDevice.Get(),1);
+		mDepthDescHeap->SetName(L"Depth descriptor heap");
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 		dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -118,7 +165,7 @@ namespace Engine {
 
 
 		DirectX::XMMATRIX viewMatrix;
-		viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 8.5f,-12.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+		viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 8.5f,-17.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
 		//DirectX::XMMatrixLookToLH({VEC3 pos},{VEC3 normalizedForward}, {VEC3 normalized updirection});
 
 		DirectX::XMMATRIX projectionMatrix;
@@ -403,7 +450,6 @@ namespace Engine {
 
 
 
-
 			barrier = {};
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -434,6 +480,8 @@ namespace Engine {
 	void RenderAPI::Release()
 	{
 
+		/* Fill out this stuff */
+
 		mCommandQueue.FlushQueue();
 
 		for (int i = 0; i < mMaterialBuffers.size(); i++) {
@@ -458,10 +506,6 @@ namespace Engine {
 		mDepthBuffer.Release();
 
 		mBufferUploader.Release();
-
-		
-
-		
 	
 		mSwapChain.Release();
 		

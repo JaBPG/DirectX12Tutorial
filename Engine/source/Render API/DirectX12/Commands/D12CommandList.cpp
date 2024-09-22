@@ -18,6 +18,8 @@ namespace Engine {
 
 		YT_EVAL_HR(pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mAllocator.Get(), nullptr, IID_PPV_ARGS(GetAddressOf())), "Error creating the commandlist");
 
+		Get()->QueryInterface(IID_PPV_ARGS(&mGFXList));
+
 	}
 	void D12CommandList::ResetCommandList()
 	{
@@ -27,6 +29,12 @@ namespace Engine {
 	}
 	void D12CommandList::Release()
 	{
+
+		if (Get() && mGFXList) {
+
+			mGFXList->Release();
+		}
+
 		if (Get()) {
 
 			Reset();
