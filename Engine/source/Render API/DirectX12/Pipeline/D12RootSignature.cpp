@@ -13,7 +13,7 @@ namespace Engine {
 	{
 		
 		//b0 (t0) registerspace for a ConstantBuffer
-		D3D12_ROOT_PARAMETER rootParameter[4];
+		D3D12_ROOT_PARAMETER rootParameter[5];
 		//pass data
 		rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 		rootParameter[0].Descriptor.ShaderRegister = 0;
@@ -45,6 +45,12 @@ namespace Engine {
 	
 		rootParameter[3].DescriptorTable.pDescriptorRanges = &range[0];
 		rootParameter[3].DescriptorTable.NumDescriptorRanges = 1;
+
+		rootParameter[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootParameter[4].Constants.Num32BitValues = 2;
+		rootParameter[4].Constants.ShaderRegister = 0;
+		rootParameter[4].Constants.RegisterSpace = 1;
+		rootParameter[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 
 		D3D12_STATIC_SAMPLER_DESC samplerDesc[3];
@@ -107,8 +113,8 @@ namespace Engine {
 		D3D12_VERSIONED_ROOT_SIGNATURE_DESC rsDesc = { };
 		rsDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_0;
 		rsDesc.Desc_1_0.pParameters = rootParameter;
-		rsDesc.Desc_1_0.NumParameters = 4; 
-		rsDesc.Desc_1_0.NumStaticSamplers = 2;
+		rsDesc.Desc_1_0.NumParameters = 5; 
+		rsDesc.Desc_1_0.NumStaticSamplers = 3;
 		rsDesc.Desc_1_0.pStaticSamplers = samplerDesc;
 		rsDesc.Desc_1_0.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 

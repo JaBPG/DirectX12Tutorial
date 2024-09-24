@@ -247,7 +247,7 @@ namespace Engine {
 		/* camera matrix stuff */
 		{
 			DirectX::XMMATRIX viewMatrix;
-			viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 6.5f,-17.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
+			viewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 5.5f,-19.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f });
 			//DirectX::XMMatrixLookToLH({VEC3 pos},{VEC3 normalizedForward}, {VEC3 normalized updirection});
 
 			DirectX::XMMATRIX projectionMatrix;
@@ -279,7 +279,11 @@ namespace Engine {
 			mMaterialBuffers[1].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(MaterialCelShader)), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
 			mMaterialBuffers[1]->SetName(L"Material CB text");
 
-			material.diffuseAlbedo = { .4f,0.0f,0.00f,1.0f };
+			//material.diffuseAlbedo = { .55f,0.0f,0.015f,1.0f };
+			
+			//material.diffuseAlbedo = { .8,0.8f,0.8f,1.0f };
+			material.diffuseAlbedo = { .10,0.17f,0.0f,1.0f };
+			
 
 			mBufferUploader.Upload((D12Resource*)mMaterialBuffers[1].GetAddressOf(), &material, sizeof(MaterialCelShader),
 				(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
@@ -289,7 +293,8 @@ namespace Engine {
 			mMaterialBuffers[2].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(MaterialCelShader)), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
 			mMaterialBuffers[2]->SetName(L"Material CB 3 (floor)");
 
-			material.diffuseAlbedo = { .6f,0.3f,0.0f,1.0f };
+			//material.diffuseAlbedo = { .6f,0.3f,0.0f,1.0f };
+			material.diffuseAlbedo = { .05f,0.05f,0.05f,1.0f };
 
 			mBufferUploader.Upload((D12Resource*)mMaterialBuffers[2].GetAddressOf(), &material, sizeof(MaterialCelShader),
 				(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
@@ -297,8 +302,13 @@ namespace Engine {
 			mMaterialBuffers.emplace_back(D12Resource());
 			mMaterialBuffers[3].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(MaterialCelShader)), D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
 			mMaterialBuffers[3]->SetName(L"Material CB 4 (other object)");
-
-			material.diffuseAlbedo = { 0.7f,0.3f,0.1f,1.0f };
+			
+			
+			material.diffuseAlbedo = { 0.33f,0.0f,0.19f,1.0f };
+			material.diffuseAlbedo = { 0.24f,0.0f,0.10f,1.0f };
+			
+			//material.diffuseAlbedo = { .0f,0.0f,0.80f,1.0f };
+			//material.diffuseAlbedo = { 0.7f,0.3f,0.1f,1.0f };
 
 			mBufferUploader.Upload((D12Resource*)mMaterialBuffers[3].GetAddressOf(), &material, sizeof(MaterialCelShader),
 				(D12CommandList*)mCommandList.GetAddressOf(), (D12CommandQueue*)mCommandQueue.GetAddressOf(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
@@ -309,7 +319,7 @@ namespace Engine {
 
 		mLights[0].position = { 0.0f,0.0f,0.0f };
 		mLights[0].strength = 1.0f;
-		mLights[0].direction = { 0.0f,-1.0f,0.0f };
+		mLights[0].direction = { 0.3f,-0.4f,0.5f };
 		
 		//Transform allocations
 		{
@@ -331,11 +341,11 @@ namespace Engine {
 
 			mObjTransforms.emplace_back(D12Resource());
 			mObjTransforms[1].Initialize(mDevice.Get(), Utils::CalculateConstantbufferAlignment(sizeof(ObjectData)), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
-			mObjTransforms[1]->SetName(L"Transform 2 CB");
+			mObjTransforms[1]->SetName(L"Transform 2 text");
 
-			scale = DirectX::XMMatrixScaling(3.0, 3.0f, 3.0f);
+			scale = DirectX::XMMatrixScaling(3.0, 3.0f, 1.5f);
 			//rotation = DirectX::XMMatrixRotationAxis({ 0.0f,1.0f,0.0f }, 3.14f);
-			translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, -10.0f);
+			translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, -12.0f);
 
 
 			tempData.transform = scale * translation;
@@ -370,7 +380,7 @@ namespace Engine {
 			DirectX::XMMATRIX rotation2 = DirectX::XMMatrixRotationAxis({ 0.0f,1.0f,0.0f }, 2.34f);
 
 			rotation = rotation * rotation2;
-			translation = DirectX::XMMatrixTranslation(-7.0f, 0.0f, -5.0f);
+			translation = DirectX::XMMatrixTranslation(-9.0f, 0.35f, -5.0f);
 			tempData.transform = scale * rotation * translation;
 
 			mObjTransformsCPU.push_back(tempData);
@@ -435,11 +445,11 @@ namespace Engine {
 
 			DirectX::XMVECTOR frameLightDirection = DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&mLights[0].direction), rotationMatrix);
 
-			DirectX::XMStoreFloat3(&currentFrameLights.direction, frameLightDirection);
+			//DirectX::XMStoreFloat3(&currentFrameLights.direction, frameLightDirection);
 
 			/* Shadowmap computations */
 			{
-				float shadowmapradius = 15.0f;
+				float shadowmapradius = 50.0f;
 
 				DirectX::XMVECTOR scenecenter = { 0.0f,0.0f,0.0f };
 				DirectX::XMVECTOR lightposition = DirectX::XMVectorScale(DirectX::XMLoadFloat3(&currentFrameLights.direction),-shadowmapradius);
@@ -488,7 +498,6 @@ namespace Engine {
 			}
 
 			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
-
 			//skeleton
 			{
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[0].Get()->GetGPUVirtualAddress());
@@ -498,13 +507,12 @@ namespace Engine {
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
 			}
-
 			//text
 			{
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[1].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[1].Get()->GetGPUVirtualAddress());
 
-				Render::MeshDrawData* drawdata = &mMeshes[2];
+				Render::MeshDrawData* drawdata = &mMeshes[3];
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
 			}
@@ -515,7 +523,7 @@ namespace Engine {
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[3].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
 
-				Render::MeshDrawData* drawdata = &mMeshes[3];
+				Render::MeshDrawData* drawdata = &mMeshes[2];
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
 			}
@@ -578,13 +586,12 @@ namespace Engine {
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
 			}
-
 			//text
 			{
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[1].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[1].Get()->GetGPUVirtualAddress());
 
-				Render::MeshDrawData* drawdata = &mMeshes[2];
+				Render::MeshDrawData* drawdata = &mMeshes[3];
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
 			}
@@ -595,7 +602,7 @@ namespace Engine {
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(1, mObjTransforms[3].Get()->GetGPUVirtualAddress());
 				mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(2, mMaterialBuffers[3].Get()->GetGPUVirtualAddress());
 
-				Render::MeshDrawData* drawdata = &mMeshes[3];
+				Render::MeshDrawData* drawdata = &mMeshes[2];
 
 				mCommandList.GFXCmd()->DrawIndexedInstanced(drawdata->indexcount, 1, drawdata->indexoffset, drawdata->vertexoffset, 0);
 			}
@@ -626,7 +633,7 @@ namespace Engine {
 
 			/* clear the swapchain and depth buffer and bind it as output */
 			{
-				const float clearColor[] = { 0.0f,0.0f,0.0f,0.0f };
+				const float clearColor[] = { 0.0f,0.0f,0.0f,1.0f };
 				D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = mSwapChain.GetCurrentRTVHandle();
 			
 				mCommandList.GFXCmd()->ClearRenderTargetView(rtvHandle, clearColor, 0, 0);
@@ -635,6 +642,12 @@ namespace Engine {
 
 			mCommandList.GFXCmd()->SetGraphicsRootConstantBufferView(0, mCBPassData.Get()->GetGPUVirtualAddress());
 			mCommandList.GFXCmd()->SetGraphicsRootDescriptorTable(3, mCBSRVUAVDescHeap.GetGPUHandle(0));
+
+			unsigned int size[2] = { 1280,720 };
+
+			//mCommandList.GFXCmd()->SetComputeRoot32BitConstants(4, 2, &size, 0);
+
+
 			mCommandList.GFXCmd()->DrawIndexedInstanced(3, 1, 0, 0, 0);
 
 
