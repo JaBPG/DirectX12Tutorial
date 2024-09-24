@@ -121,7 +121,7 @@ float OutLine(float2 uvcoordinate, const float depthsensitivity, const float nor
     float3 albedodiff1 = albedosamples[3] - albedosamples[2];
     float coloredgevalue = sqrt(dot(albedodiff0, albedodiff0) + dot(albedodiff1, albedodiff1));
     float colorthreshhold = (1.0f / colorsensitivity);
-    coloredgevalue = (colorthreshhold > colorthreshhold) ? 1.0f : 0.0f;
+    coloredgevalue = (coloredgevalue > colorthreshhold) ? 1.0f : 0.0f;
     
     
     
@@ -144,7 +144,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET
     float intensity = dot(-(normalize(gPassData.light.direction)), normalize(normal));
    
 
-    float edge = OutLine(input.uvs, 250.0f, 0.55f, 1.0f);
+    float edge = OutLine(input.uvs, 200.0f, 0.35f, 20.0f);
   
     float factor = step(0.0f, intensity);
     
